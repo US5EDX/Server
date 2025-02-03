@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Server.Data;
 using Server.Data.Extensions;
 using Server.Data.Repositories;
+using Server.Middleware;
 using Server.Services.Dtos;
 using Server.Services.Services;
 using System.Text;
@@ -46,6 +45,8 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -56,6 +57,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseMiddleware<LoggingMiddleware>();
 
 app.MapControllers();
 
