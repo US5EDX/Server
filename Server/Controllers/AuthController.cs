@@ -8,11 +8,11 @@ namespace Server.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AuthService _userService;
+        private readonly AuthService _authService;
 
-        public AuthController(AuthService userService)
+        public AuthController(AuthService authService)
         {
-            _userService = userService;
+            _authService = authService;
         }
 
         [HttpPost("autologin")]
@@ -21,7 +21,7 @@ namespace Server.Controllers
             if (refreshToken == null || refreshToken == "")
                 return Unauthorized("Refresh token empty");
 
-            var user = await _userService.AutoLogin(refreshToken);
+            var user = await _authService.AutoLogin(refreshToken);
 
             if (user == null)
                 return Unauthorized("Invalid or expired refresh token");
@@ -32,7 +32,7 @@ namespace Server.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto login)
         {
-            var user = await _userService.Login(login);
+            var user = await _authService.Login(login);
             if (user == null)
                 return Unauthorized("Invalid email or password");
 
@@ -45,7 +45,7 @@ namespace Server.Controllers
             if (refreshToken == null || refreshToken == "")
                 return Unauthorized("Refresh token empty");
 
-            var tokens = await _userService.Refresh(refreshToken);
+            var tokens = await _authService.Refresh(refreshToken);
 
             if (tokens == null)
                 return Unauthorized("Invalid or expired refresh token");
@@ -59,7 +59,7 @@ namespace Server.Controllers
             if (refreshToken == null || refreshToken == "")
                 return Unauthorized("Refresh token empty");
 
-            await _userService.Logout(refreshToken);
+            await _authService.Logout(refreshToken);
 
             return Ok("Logged out successfully");
         }

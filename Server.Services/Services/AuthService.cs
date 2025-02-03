@@ -57,9 +57,15 @@ namespace Server.Services.Services
         private async Task<TokenDto> GetTokenDto(User user)
         {
             var newAccessToken = _jwtService.GenerateToken(new Guid(user.UserId).ToString(), user.Role.ToString());
-            var newRefreshToken = _jwtService.GenerateRefreshToken();
 
-            await _userRepository.RefreshToken(user, newRefreshToken, DateTime.UtcNow.AddDays(14));
+            string? newRefreshToken = user.RefreshToken;
+
+            if (user.RefreshToken is null ||
+                                user.RefreshTokenExpiry < DateTime.UtcNow.AddDays(2))
+            {
+                newRefreshToken = _jwtService.GenerateRefreshToken();
+                await _userRepository.RefreshToken(user, newRefreshToken, DateTime.UtcNow.AddDays(14));
+            }
 
             return new TokenDto(newAccessToken, newRefreshToken);
         }
