@@ -5,11 +5,10 @@ namespace Server.Services.Mappings
 {
     public class UserMapper
     {
-        public static WorkerInfoDto MapToWorkerInfoDto(Worker worker, byte role)
+        public static WorkerInfoDto MapToWorkerInfoDto(Worker worker)
         {
-            return new WorkerInfoDto(role)
+            return new WorkerInfoDto()
             {
-                WorkerId = worker.WorkerId,
                 FullName = worker.FullName,
                 Faculty = FacultyMapper.MapToFacultyDto(worker.FacultyNavigation),
                 Department = worker.Department,
@@ -18,11 +17,10 @@ namespace Server.Services.Mappings
             };
         }
 
-        public static StudentInfoDto MapToStudentInfoDto(Student student, byte role)
+        public static StudentInfoDto MapToStudentInfoDto(Student student)
         {
-            return new StudentInfoDto(role)
+            return new StudentInfoDto()
             {
-                StudentId = student.StudentId,
                 FullName = student.FullName,
                 Group = GroupMapper.MapToGroupDto(student.GroupNavigation),
                 Faculty = FacultyMapper.MapToFacultyDto(student.FacultyNavigation),

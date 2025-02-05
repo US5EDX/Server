@@ -75,7 +75,13 @@ namespace Server.Services.Services
             var tokens = await GetTokenDto(user);
 
             if (user.Role == 1)
-                return new { tokens.AccessToken, tokens.RefreshToken };
+                return new
+                {
+                    user.UserId,
+                    user.Role,
+                    tokens.AccessToken,
+                    tokens.RefreshToken
+                };
 
             if (user.Role == 4)
             {
@@ -86,7 +92,9 @@ namespace Server.Services.Services
 
                 return new
                 {
-                    Student = UserMapper.MapToStudentInfoDto(student, user.Role),
+                    user.UserId,
+                    user.Role,
+                    StudentInfo = UserMapper.MapToStudentInfoDto(student),
                     tokens.AccessToken,
                     tokens.RefreshToken
                 };
@@ -100,7 +108,9 @@ namespace Server.Services.Services
 
             return new
             {
-                Worker = UserMapper.MapToWorkerInfoDto(worker, user.Role),
+                user.UserId,
+                user.Role,
+                WorkerInfo = UserMapper.MapToWorkerInfoDto(worker),
                 tokens.AccessToken,
                 tokens.RefreshToken
             };
