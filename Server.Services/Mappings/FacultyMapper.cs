@@ -13,5 +13,14 @@ namespace Server.Services.Mappings
                 FacultyName = faculty.FacultyName
             };
         }
+
+        public static Faculty MapToFaculty(FacultyDto faculty)
+        {
+            return new Faculty()
+            {
+                FacultyId = faculty.FacultyId,
+                FacultyName = faculty.FacultyName
+            };
+        }
     }
 }

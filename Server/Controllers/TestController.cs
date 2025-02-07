@@ -15,7 +15,7 @@ namespace Server.Controllers
             return Ok(new { Message = "This is a protected endpoint" });
         }
 
-        [Authorize(Roles = "1")] // Доступ тільки для суперадміна
+        [Authorize(Roles = "2")] // Доступ тільки для суперадміна
         [HttpGet("admin")]
         public IActionResult GetAdminData()
         {
