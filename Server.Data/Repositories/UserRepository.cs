@@ -23,6 +23,11 @@ namespace Server.Data.Repositories
             return await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
         }
 
+        public async Task<User?> GetUserById(byte[] id)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
+        }
+
         public async Task<Student?> GetStudent(byte[] id)
         {
             return await _context.Students.Include(st => st.FacultyNavigation)
@@ -45,6 +50,13 @@ namespace Server.Data.Repositories
         {
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdatePassword(User user, string password, string salt)
+        {
+            user.Password = password;
+            user.Salt = salt;
             await _context.SaveChangesAsync();
         }
     }

@@ -20,6 +20,7 @@ builder.Services.AddData(builder.Configuration);
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
 builder.Services.AddScoped<FacultiesService>();

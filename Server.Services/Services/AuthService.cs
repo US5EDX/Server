@@ -78,6 +78,7 @@ namespace Server.Services.Services
                 return new
                 {
                     user.UserId,
+                    user.Email,
                     user.Role,
                     tokens.AccessToken,
                     tokens.RefreshToken
@@ -93,6 +94,7 @@ namespace Server.Services.Services
                 return new
                 {
                     user.UserId,
+                    user.Email,
                     user.Role,
                     StudentInfo = UserMapper.MapToStudentInfoDto(student),
                     tokens.AccessToken,
@@ -109,6 +111,7 @@ namespace Server.Services.Services
             return new
             {
                 user.UserId,
+                user.Email,
                 user.Role,
                 WorkerInfo = UserMapper.MapToWorkerInfoDto(worker),
                 tokens.AccessToken,

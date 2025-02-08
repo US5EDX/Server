@@ -30,13 +30,13 @@ namespace Server.Services.Services
             return password.ToString();
         }
 
-        public static byte[] GenerateSalt()
+        public static string GenerateSalt()
         {
             var rncCsp = RandomNumberGenerator.Create();
-            byte[] salt = new byte[16];
+            byte[] salt = new byte[12];
             rncCsp.GetBytes(salt);
 
-            return salt;
+            return Convert.ToBase64String(salt);
         }
 
         private static int GetRandomByteNumber(int minValue, int maxValue)
