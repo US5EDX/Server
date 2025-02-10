@@ -16,7 +16,7 @@ namespace Server.Services.Services
         {
             var user = await _userRepository.GetUserById(updatePassword.UserId);
 
-            if (user == null)
+            if (user is null)
                 return null;
 
             if (!HasherService.VerifyPassword(updatePassword.OldPassword, user.Password, user.Salt))

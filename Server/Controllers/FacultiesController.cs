@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Server.Services.Dtos;
 using Server.Services.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace Server.Controllers
 {
@@ -26,11 +27,11 @@ namespace Server.Controllers
 
         [Authorize(Roles = "1")]
         [HttpPost("addFaculty")]
-        public async Task<IActionResult> AddFaculty([FromBody] string facultyName)
+        public async Task<IActionResult> AddFaculty([FromBody]
+        [Required]
+        [Length(1, 100)]
+        string facultyName)
         {
-            if (string.IsNullOrEmpty(facultyName))
-                return BadRequest("Невалідні вхідні дані");
-
             return StatusCode(StatusCodes.Status201Created, await _facultiesService.AddFaculty(facultyName));
         }
 
@@ -38,9 +39,6 @@ namespace Server.Controllers
         [HttpPut("updateFaculty")]
         public async Task<IActionResult> UpdateFaculty([FromBody] FacultyDto faculty)
         {
-            if (faculty is null)
-                return BadRequest("Невалідні вхідні дані");
-
             var updatedFaculty = await _facultiesService.UpdateFaculty(faculty);
 
             if (updatedFaculty is null)
@@ -50,13 +48,13 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "1")]
-        [HttpDelete("deleteFaculty")]
-        public async Task<IActionResult> DeleteFaculty(uint? facultyId)
+        [HttpDelete("deleteFaculty/{facultyId}")]
+        public async Task<IActionResult> DeleteFaculty(
+            [BindRequired]
+            [Range(1, uint.MaxValue - 1)]
+            uint facultyId)
         {
-            if (facultyId is null)
-                return BadRequest("Невалідні вхідні дані");
-
-            var isFacultyDeleted = await _facultiesService.DeleteFaculty(facultyId.Value);
+            var isFacultyDeleted = await _facultiesService.DeleteFaculty(facultyId);
 
             if (isFacultyDeleted is null)
                 return BadRequest("Неможливо видалити, оскільки до факультету є прив'язані дані");

@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Server.Services.Dtos
 {
     public class FacultyDto
     {
+        [Required]
+        [Range(1, uint.MaxValue)]
         public uint FacultyId { get; set; }
 
+        [Required]
+        [Length(1, 100)]
         public string FacultyName { get; set; } = null!;
     }
 }

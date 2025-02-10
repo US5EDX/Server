@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.Services.Dtos;
 using Server.Services.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace Server.Controllers
 {
@@ -19,12 +20,12 @@ namespace Server.Controllers
         [HttpPost("autologin")]
         public async Task<IActionResult> AutoLogin([FromBody] string refreshToken)
         {
-            if (refreshToken == null || refreshToken == "")
+            if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("Refresh token empty");
 
             var user = await _authService.AutoLogin(refreshToken);
 
-            if (user == null)
+            if (user is null)
                 return Unauthorized("Invalid or expired refresh token");
 
             return Ok(user);
@@ -34,7 +35,8 @@ namespace Server.Controllers
         public async Task<IActionResult> Login([FromBody] LoginDto login)
         {
             var user = await _authService.Login(login);
-            if (user == null)
+
+            if (user is null)
                 return Unauthorized("Invalid email or password");
 
             return Ok(user);
@@ -43,12 +45,12 @@ namespace Server.Controllers
         [HttpPost("refresh")]
         public async Task<IActionResult> Resfresh([FromBody] string refreshToken)
         {
-            if (refreshToken == null || refreshToken == "")
+            if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("Refresh token empty");
 
             var tokens = await _authService.Refresh(refreshToken);
 
-            if (tokens == null)
+            if (tokens is null)
                 return Unauthorized("Invalid or expired refresh token");
 
             return Ok(tokens);
@@ -57,7 +59,7 @@ namespace Server.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] string refreshToken)
         {
-            if (refreshToken == null || refreshToken == "")
+            if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("Refresh token empty");
 
             await _authService.Logout(refreshToken);

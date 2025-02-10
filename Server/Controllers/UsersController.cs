@@ -9,24 +9,19 @@ namespace Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         public readonly UserService _userService;
 
-        public UserController(UserService userService)
+        public UsersController(UserService userService)
         {
             _userService = userService;
         }
 
         [Authorize]
-        [HttpPost("updatePassword")]
+        [HttpPut("updatePassword")]
         public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDto updatePassword)
         {
-            if (updatePassword == null ||
-                string.IsNullOrEmpty(updatePassword.OldPassword) ||
-                string.IsNullOrEmpty(updatePassword.NewPassword))
-                return BadRequest("Невалідні вхідні дані");
-
             if (updatePassword.OldPassword == updatePassword.NewPassword)
                 return BadRequest("Новий пароль не може бути таким самим, як старий");
 
@@ -35,15 +30,16 @@ namespace Server.Controllers
                 return BadRequest("Новий пароль не задовльняє умови");
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (userId is null || new Guid(userId).ToByteArray() == updatePassword.UserId)
                 return BadRequest("Неспівпадіння даних запиту");
 
-            var res = await _userService.UpdatePassword(updatePassword);
+            var isSuccess = await _userService.UpdatePassword(updatePassword);
 
-            if (res is null)
+            if (isSuccess is null)
                 return NotFound("Користувача не знайдено");
 
-            if (res == false)
+            if (isSuccess is false)
                 return BadRequest("Невірний старий пароль");
 
             return Ok();
