@@ -1,13 +1,13 @@
-﻿using Server.Data.Repositories;
+﻿using Server.Models.Interfaces;
 using Server.Services.Dtos;
 
 namespace Server.Services.Services
 {
-    public class UserService
+    public class UsersService
     {
         private readonly IUserRepository _userRepository;
 
-        public UserService(IUserRepository userRepository)
+        public UsersService(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }

@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Server.Data.Extensions;
 using Server.Data.Repositories;
 using Server.Middleware;
+using Server.Models.Interfaces;
 using Server.Services.Dtos;
 using Server.Services.Services;
 using System.Text;
@@ -20,10 +21,13 @@ builder.Services.AddData(builder.Configuration);
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<UsersService>();
 
 builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
 builder.Services.AddScoped<FacultiesService>();
+
+builder.Services.AddScoped<IHoldingRepository, HoldingRepository>();
+builder.Services.AddScoped<HoldingsService>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddSingleton<JwtService>();

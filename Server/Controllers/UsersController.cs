@@ -11,9 +11,9 @@ namespace Server.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        public readonly UserService _userService;
+        public readonly UsersService _userService;
 
-        public UsersController(UserService userService)
+        public UsersController(UsersService userService)
         {
             _userService = userService;
         }

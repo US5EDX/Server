@@ -1,6 +1,6 @@
 ﻿using Server.Models.Models;
 
-namespace Server.Data.Repositories
+namespace Server.Models.Interfaces
 {
     public interface IFacultyRepository
     {
