@@ -23,4 +23,7 @@ public partial class User
 
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiry { get; set; }
+
+    public virtual Student? Student { get; set; }
+    public virtual Worker? Worker { get; set; }
 }

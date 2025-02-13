@@ -27,5 +27,37 @@ namespace Server.Services.Mappings
                 Headman = student.Headman
             };
         }
+
+        public static WorkerFullInfoDto MapToWorkerFullInfoDto(User worker)
+        {
+            return new WorkerFullInfoDto()
+            {
+                Id = new Ulid(worker.UserId).ToString(),
+                Email = worker.Email,
+                Role = worker.Role,
+                FullName = worker.Worker.FullName,
+                Faculty = FacultyMapper.MapToFacultyDto(worker.Worker.FacultyNavigation),
+                Department = worker.Worker.Department,
+                Position = worker.Worker.Position,
+                Group = worker.Worker.GroupNavigation is null ? null : GroupMapper.MapToGroupShortDto(worker.Worker.GroupNavigation)
+            };
+        }
+
+        public static User MapToUserWithoutId(WorkerFullInfoDto worker)
+        {
+            return new User()
+            {
+                Email = worker.Email,
+                Role = worker.Role,
+                Worker = new Worker()
+                {
+                    FullName = worker.FullName,
+                    Faculty = worker.Faculty.FacultyId,
+                    Department = worker.Department,
+                    Position = worker.Position,
+                    Group = worker.Group?.GroupId
+                }
+            };
+        }
     }
 }

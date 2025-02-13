@@ -17,5 +17,14 @@ namespace Server.Services.Mappings
                 Parsemester = group.Parsemester
             };
         }
+
+        public static GroupShortDto MapToGroupShortDto(Group group)
+        {
+            return new GroupShortDto()
+            {
+                GroupId = group.GroupId,
+                GroupCode = group.GroupCode,
+            };
+        }
     }
 }

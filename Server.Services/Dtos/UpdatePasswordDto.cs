@@ -5,8 +5,8 @@ namespace Server.Services.Dtos
     public class UpdatePasswordDto
     {
         [Required]
-        [Length(16, 16)]
-        public byte[] UserId { get; set; }
+        [Length(26, 26)]
+        public string UserId { get; set; }
 
         [Required]
         [MinLength(1)]

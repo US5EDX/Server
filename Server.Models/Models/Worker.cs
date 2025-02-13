@@ -28,4 +28,6 @@ public partial class Worker
     public virtual Faculty FacultyNavigation { get; set; } = null!;
 
     public virtual Group? GroupNavigation { get; set; }
+
+    public virtual User User { get; set; } = null!;
 }

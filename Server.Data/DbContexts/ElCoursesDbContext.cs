@@ -296,6 +296,16 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasColumnName("refreshToken");
             entity.Property(e => e.RefreshTokenExpiry)
                 .HasColumnName("refreshTokenExpiry");
+
+            entity.HasOne(e => e.Student)
+              .WithOne(s => s.User)
+              .HasForeignKey<Student>(s => s.StudentId)
+              .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Worker)
+                  .WithOne(t => t.User)
+                  .HasForeignKey<Worker>(t => t.WorkerId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Worker>(entity =>

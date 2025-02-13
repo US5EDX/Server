@@ -25,9 +25,9 @@ namespace Server.Services.Services
             return HoldingMapper.MapToHoldingDto(newHolding);
         }
 
-        public async Task<HoldingDto?> UpdateHolding(HoldingDto faculty)
+        public async Task<HoldingDto?> UpdateHolding(HoldingDto holding)
         {
-            var updatedHolding = await _holdingRepository.Update(HoldingMapper.MapToHolding(faculty));
+            var updatedHolding = await _holdingRepository.Update(HoldingMapper.MapToHolding(holding));
 
             if (updatedHolding is null)
                 return null;

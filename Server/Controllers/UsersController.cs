@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Server.Services.Dtos;
 using Server.Services.Services;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 
@@ -31,7 +33,7 @@ namespace Server.Controllers
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (userId is null || new Guid(userId).ToByteArray() == updatePassword.UserId)
+            if (userId is null || userId != updatePassword.UserId)
                 return BadRequest("Неспівпадіння даних запиту");
 
             var isSuccess = await _userService.UpdatePassword(updatePassword);
@@ -41,6 +43,26 @@ namespace Server.Controllers
 
             if (isSuccess is false)
                 return BadRequest("Невірний старий пароль");
+
+            return Ok();
+        }
+
+        [Authorize(Roles = "1,2")]
+        [HttpPut("resetPassword/{userId}")]
+        public async Task<IActionResult> ResetPassword(
+            [BindRequired]
+            [Length(26,26)]
+            string userId)
+        {
+            var requestUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            var isSuccess = await _userService.ResetPassword(userId, requestUserRole);
+
+            if (isSuccess is null)
+                return BadRequest("Неможливо виконати дію");
+
+            if (isSuccess == false)
+                return NotFound("Користувача не знайдено");
 
             return Ok();
         }

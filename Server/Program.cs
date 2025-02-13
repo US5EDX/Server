@@ -29,7 +29,11 @@ builder.Services.AddScoped<FacultiesService>();
 builder.Services.AddScoped<IHoldingRepository, HoldingRepository>();
 builder.Services.AddScoped<HoldingsService>();
 
+builder.Services.AddScoped<IWorkerRepository, WorkerRepository>();
+builder.Services.AddScoped<WorkersService>();
+
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<MailOptions>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.AddSingleton<JwtService>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtOptions>();

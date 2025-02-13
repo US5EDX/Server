@@ -20,7 +20,7 @@ namespace Server.Services.Services
         {
             var user = await _userRepository.GetUserByEmail(login.Email);
 
-            if (user == null || !HasherService.VerifyPassword(login.Password, user.Password, user.Salt))
+            if (user is null || !HasherService.VerifyPassword(login.Password, user.Password, user.Salt))
                 return null;
 
             return await GetAuthorizedUserInfo(user);
@@ -30,7 +30,7 @@ namespace Server.Services.Services
         {
             var user = await _userRepository.GetUserByToken(refreshToken);
 
-            if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
+            if (user is null || user.RefreshTokenExpiry < DateTime.UtcNow)
                 return null;
 
             return await GetAuthorizedUserInfo(user);
@@ -40,7 +40,7 @@ namespace Server.Services.Services
         {
             var user = await _userRepository.GetUserByToken(refreshToken);
 
-            if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
+            if (user is null || user.RefreshTokenExpiry < DateTime.UtcNow)
                 return null;
 
             return await GetTokenDto(user);
@@ -50,13 +50,13 @@ namespace Server.Services.Services
         {
             var user = await _userRepository.GetUserByToken(refreshToken);
 
-            if (user != null)
+            if (user is not null)
                 await _userRepository.DeleteToken(user);
         }
 
         private async Task<TokenDto> GetTokenDto(User user)
         {
-            var newAccessToken = _jwtService.GenerateToken(new Guid(user.UserId).ToString(), user.Role.ToString());
+            var newAccessToken = _jwtService.GenerateToken(new Ulid(user.UserId).ToString(), user.Role.ToString());
 
             string? newRefreshToken = user.RefreshToken;
 
@@ -77,7 +77,7 @@ namespace Server.Services.Services
             if (user.Role == 1)
                 return new
                 {
-                    user.UserId,
+                    UserId = new Ulid(user.UserId).ToString(),
                     user.Email,
                     user.Role,
                     tokens.AccessToken,
@@ -93,7 +93,7 @@ namespace Server.Services.Services
 
                 return new
                 {
-                    user.UserId,
+                    UserId = new Ulid(user.UserId).ToString(),
                     user.Email,
                     user.Role,
                     StudentInfo = UserMapper.MapToStudentInfoDto(student),
@@ -110,7 +110,7 @@ namespace Server.Services.Services
 
             return new
             {
-                user.UserId,
+                UserId = new Ulid(user.UserId).ToString(),
                 user.Email,
                 user.Role,
                 WorkerInfo = UserMapper.MapToWorkerInfoDto(worker),

@@ -52,12 +52,12 @@ namespace Server.Controllers
             [Range(1901, 2155)]
             short eduYear)
         {
-            var isFacultyDeleted = await _holdingsService.DeleteHolding(eduYear);
+            var isHoldingDeleted = await _holdingsService.DeleteHolding(eduYear);
 
-            if (isFacultyDeleted is null)
+            if (isHoldingDeleted is null)
                 return BadRequest("Неможливо видалити, оскільки до навчального є прив'язані дані");
 
-            if (isFacultyDeleted == false)
+            if (isHoldingDeleted == false)
                 return NotFound("Вказаний навчальний рік не знайдено");
 
             return Ok();

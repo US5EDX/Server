@@ -20,4 +20,6 @@ public partial class Student
     public virtual Group GroupNavigation { get; set; } = null!;
 
     public virtual ICollection<Record> Records { get; set; } = new List<Record>();
+
+    public virtual User User { get; set; } = null!;
 }

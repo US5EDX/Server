@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Server.Data.DbContexts;
+using Server.Data.ExternalServices;
+using Server.Models.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +19,9 @@ namespace Server.Data.Extensions
             var connectionString = configuration.GetConnectionString("ElCoursesDb");
             services.AddDbContext<ElCoursesDbContext>(options =>
                 options.UseMySql(connectionString, ServerVersion.Parse("8.0.41-mysql")));
+
+            var mailSettings = configuration.GetSection("MailSettings");
+            services.AddSingleton<IEmailService, EmailService>();
         }
     }
 }
