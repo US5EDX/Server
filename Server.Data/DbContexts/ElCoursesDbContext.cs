@@ -276,6 +276,8 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.HasIndex(e => e.Email, "email_UNIQUE").IsUnique();
             entity.HasIndex(e => e.RefreshToken, "refreshToken_UNIQUE").IsUnique();
 
+            entity.HasIndex(e => e.Role, "role_idx");
+
             entity.Property(e => e.UserId)
                 .HasMaxLength(16)
                 .HasDefaultValueSql("uuid_to_bin(uuid(),1)")
@@ -316,7 +318,7 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
 
             entity.HasIndex(e => e.Faculty, "fk_worker_faculty");
 
-            entity.HasIndex(e => e.Group, "groupId_idx");
+            entity.HasIndex(e => e.Group, "group_UNIQUE").IsUnique();
 
             entity.Property(e => e.WorkerId)
                 .HasMaxLength(16)

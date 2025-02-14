@@ -28,22 +28,28 @@ namespace Server.Services.Mappings
             };
         }
 
-        public static WorkerFullInfoDto MapToWorkerFullInfoDto(User worker)
+        public static UserFullInfoDto MapToUserFullInfoDto(User user)
         {
-            return new WorkerFullInfoDto()
+            return new UserFullInfoDto()
             {
-                Id = new Ulid(worker.UserId).ToString(),
-                Email = worker.Email,
-                Role = worker.Role,
-                FullName = worker.Worker.FullName,
-                Faculty = FacultyMapper.MapToFacultyDto(worker.Worker.FacultyNavigation),
-                Department = worker.Worker.Department,
-                Position = worker.Worker.Position,
-                Group = worker.Worker.GroupNavigation is null ? null : GroupMapper.MapToGroupShortDto(worker.Worker.GroupNavigation)
+                Id = new Ulid(user.UserId).ToString(),
+                Email = user.Email,
+                Role = user.Role,
+
+                FullName = user.Role < 4 ? user.Worker.FullName : user.Student.FullName,
+
+                Faculty = FacultyMapper.MapToFacultyDto(user.Role < 4 ? user.Worker.FacultyNavigation : user.Student.FacultyNavigation),
+
+                Department = user.Role < 4 ? user.Worker.Department : "-",
+
+                Position = user.Role < 4 ? user.Worker.Position : ("студент - " + user.Student.GroupNavigation.Course),
+
+                Group = user.Worker?.GroupNavigation is null ? null :
+                    GroupMapper.MapToGroupShortDto(user.Role < 4 ? user.Worker.GroupNavigation : user.Student.GroupNavigation)
             };
         }
 
-        public static User MapToUserWithoutId(WorkerFullInfoDto worker)
+        public static User MapToUserWithoutId(UserFullInfoDto worker)
         {
             return new User()
             {

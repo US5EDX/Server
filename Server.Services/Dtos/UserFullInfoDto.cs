@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Server.Services.Validations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Server.Services.Dtos
 {
-    public class WorkerFullInfoDto
+    public class UserFullInfoDto : IValidatableObject
     {
         public string? Id { get; set; }
 
@@ -11,7 +12,7 @@ namespace Server.Services.Dtos
         public string Email { get; set; }
 
         [Required]
-        [Range(2, 3)]
+        [Range(2, 4)]
         public byte Role { get; set; }
 
         [Required]
@@ -30,5 +31,15 @@ namespace Server.Services.Dtos
         public string Position { get; set; }
 
         public GroupShortDto? Group { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Role == 4 && Group == null)
+            {
+                yield return new ValidationResult(
+                    "Коли додається студент він повинен мати групу",
+                    [nameof(Group)]);
+            }
+        }
     }
 }

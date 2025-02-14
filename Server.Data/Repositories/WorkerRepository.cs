@@ -97,13 +97,13 @@ namespace Server.Data.Repositories
             return await GetAllAsQueryable().FirstAsync(u => u.UserId.SequenceEqual(existingUser.UserId));
         }
 
-        public async Task<bool?> Delete(byte[] userId)
+        public async Task<bool?> Delete(byte[] userId, int requestUserRole)
         {
             var existingUser = await _context.Users
                 .Include(u => u.Worker)
                 .FirstOrDefaultAsync(u => u.UserId.SequenceEqual(userId));
 
-            if (existingUser is null || existingUser.Worker is null)
+            if (existingUser is null || existingUser.Worker is null || existingUser.Role <= requestUserRole)
                 return false;
 
             bool hasDependencies =

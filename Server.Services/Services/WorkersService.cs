@@ -23,15 +23,15 @@ namespace Server.Services.Services
             return workersCount;
         }
 
-        public async Task<IEnumerable<WorkerFullInfoDto>> GetWorkers(int pageNumber, int pageSize, uint? facultyFilter)
+        public async Task<IEnumerable<UserFullInfoDto>> GetWorkers(int pageNumber, int pageSize, uint? facultyFilter)
         {
             var workers = facultyFilter is null ? await _workerRepository.GetWorkers(pageNumber, pageSize) :
                 await _workerRepository.GetWorkers(pageNumber, pageSize, facultyFilter.Value);
 
-            return workers.Select(UserMapper.MapToWorkerFullInfoDto);
+            return workers.Select(UserMapper.MapToUserFullInfoDto);
         }
 
-        public async Task<WorkerFullInfoDto> AddWorker(WorkerFullInfoDto worker)
+        public async Task<UserFullInfoDto> AddWorker(UserFullInfoDto worker)
         {
             var user = UserMapper.MapToUserWithoutId(worker);
 
@@ -65,10 +65,10 @@ namespace Server.Services.Services
             //    "Вхід через:\n" +
             //    "\n\nЗ повагою, ДНУ.");
 
-            return UserMapper.MapToWorkerFullInfoDto(newWorker);
+            return UserMapper.MapToUserFullInfoDto(newWorker);
         }
 
-        public async Task<WorkerFullInfoDto?> UpdateWorker(WorkerFullInfoDto worker)
+        public async Task<UserFullInfoDto?> UpdateWorker(UserFullInfoDto worker)
         {
             var user = UserMapper.MapToUserWithoutId(worker);
 
@@ -87,17 +87,17 @@ namespace Server.Services.Services
             if (updatedWorker is null)
                 return null;
 
-            return UserMapper.MapToWorkerFullInfoDto(updatedWorker);
+            return UserMapper.MapToUserFullInfoDto(updatedWorker);
         }
 
-        public async Task<bool?> DeleteWorker(string workerId)
+        public async Task<bool?> DeleteWorker(string workerId, int requestUserId)
         {
             var isSuccess = Ulid.TryParse(workerId, out Ulid ulidWorkerId);
 
             if (!isSuccess)
                 throw new InvalidCastException("Невалідний Id");
 
-            return await _workerRepository.Delete(ulidWorkerId.ToByteArray());
+            return await _workerRepository.Delete(ulidWorkerId.ToByteArray(), requestUserId);
         }
     }
 }

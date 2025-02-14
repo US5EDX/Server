@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Server.Models.Models;
 using Server.Services.Dtos;
 using Server.Services.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace Server.Controllers
 {
@@ -34,19 +36,29 @@ namespace Server.Controllers
             return Ok(await _workersService.GetWorkers(pageNumber, pageSize, facultyFilter));
         }
 
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "1,2")]
         [HttpPost("addWorker")]
-        public async Task<IActionResult> AddHolding([FromBody] WorkerFullInfoDto worker)
+        public async Task<IActionResult> AddWorker([FromBody] UserFullInfoDto worker)
         {
+            bool isParsed = int.TryParse(User.FindFirst(ClaimTypes.Role)?.Value, out int requestUserRole);
+
+            if (!isParsed || worker.Role == requestUserRole)
+                return Forbid("Неможливо виконати дію");
+
             return StatusCode(StatusCodes.Status201Created, await _workersService.AddWorker(worker));
         }
 
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "1,2")]
         [HttpPut("updateWorker")]
-        public async Task<IActionResult> UpdateHolding([FromBody] WorkerFullInfoDto worker)
+        public async Task<IActionResult> UpdateWorker([FromBody] UserFullInfoDto worker)
         {
             if (worker.Id is null)
-                BadRequest("Невалідні вхідні дані");
+                return BadRequest("Невалідні вхідні дані");
+
+            bool isParsed = int.TryParse(User.FindFirst(ClaimTypes.Role)?.Value, out int requestUserRole);
+
+            if (!isParsed || worker.Role <= requestUserRole)
+                return Forbid("Неможливо виконати дію");
 
             var updatedWorker = await _workersService.UpdateWorker(worker);
 
@@ -56,20 +68,25 @@ namespace Server.Controllers
             return Ok(updatedWorker);
         }
 
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "1,2")]
         [HttpDelete("deleteWorker/{workerId}")]
         public async Task<IActionResult> DeleteWorker(
             [BindRequired]
             [Length(26,26)]
             string workerId)
         {
-            var isFacultyDeleted = await _workersService.DeleteWorker(workerId);
+            bool isParsed = int.TryParse(User.FindFirst(ClaimTypes.Role)?.Value, out int requestUserRole);
+
+            if (!isParsed)
+                return BadRequest("Неможливо виконати дію");
+
+            var isFacultyDeleted = await _workersService.DeleteWorker(workerId, requestUserRole);
 
             if (isFacultyDeleted is null)
                 return BadRequest("Неможливо видалити, оскільки до співробітника є прив'язані дані");
 
             if (isFacultyDeleted == false)
-                return NotFound("Вказаного співобітника не знайдено");
+                return NotFound("Вказаного співобітника не знайдено або недостатній рівень доступу");
 
             return Ok();
         }

@@ -10,6 +10,6 @@ namespace Server.Models.Interfaces
         Task<IEnumerable<User>> GetWorkers(int pageNumber, int pageSize, uint facultyFilter);
         Task<User> Add(User user);
         Task<User?> Update(User user);
-        Task<bool?> Delete(byte[] userId);
+        Task<bool?> Delete(byte[] userId, int requestUserId);
     }
 }

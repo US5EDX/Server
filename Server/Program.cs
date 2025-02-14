@@ -35,6 +35,9 @@ builder.Services.AddScoped<WorkersService>();
 builder.Services.AddScoped<ISpecialtyRepository, SpecialtyRepository>();
 builder.Services.AddScoped<SpecialtiesService>();
 
+builder.Services.AddScoped<IAcademicianRepository, AcademicianRepository>();
+builder.Services.AddScoped<AcademiciansService>();
+
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<MailOptions>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.AddSingleton<JwtService>();
