@@ -43,7 +43,7 @@ namespace Server.Controllers
             bool isParsed = int.TryParse(User.FindFirst(ClaimTypes.Role)?.Value, out int requestUserRole);
 
             if (!isParsed || worker.Role == requestUserRole)
-                return Forbid("Неможливо виконати дію");
+                return BadRequest("Неможливо виконати дію");
 
             return StatusCode(StatusCodes.Status201Created, await _workersService.AddWorker(worker));
         }
@@ -58,7 +58,7 @@ namespace Server.Controllers
             bool isParsed = int.TryParse(User.FindFirst(ClaimTypes.Role)?.Value, out int requestUserRole);
 
             if (!isParsed || worker.Role <= requestUserRole)
-                return Forbid("Неможливо виконати дію");
+                return BadRequest("Неможливо виконати дію");
 
             var updatedWorker = await _workersService.UpdateWorker(worker);
 
