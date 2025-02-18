@@ -54,7 +54,7 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
 
             entity.Property(e => e.DisciplineId).HasColumnName("disciplineId");
             entity.Property(e => e.CatalogType)
-                .HasComment("0 - USC\n1 - FSC")
+                .HasComment("1 - USC\n2 - FSC")
                 .HasColumnName("catalogType");
             entity.Property(e => e.Course)
                 .HasMaxLength(100)

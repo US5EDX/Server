@@ -26,6 +26,13 @@ namespace Server.Controllers
             return Ok(await _holdingsService.GetAll());
         }
 
+        [Authorize(Roles = "2,3")]
+        [HttpGet("getLastFive")]
+        public async Task<IActionResult> GetLastFive()
+        {
+            return Ok(await _holdingsService.GetLastFive());
+        }
+
         [Authorize(Roles = "1")]
         [HttpPost("addHolding")]
         public async Task<IActionResult> AddHolding([FromBody] HoldingDto holding)

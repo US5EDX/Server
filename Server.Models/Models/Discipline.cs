@@ -10,12 +10,12 @@ public partial class Discipline
     public string DisciplineCode { get; set; } = null!;
 
     /// <summary>
-    /// 0 - USC
-    /// 1 - FSC
+    /// 1 - USC
+    /// 2 - FSC
     /// </summary>
     public byte CatalogType { get; set; }
 
-    public uint? FacultyId { get; set; }
+    public uint FacultyId { get; set; }
 
     public uint? SpecialtyId { get; set; }
 
@@ -66,7 +66,7 @@ public partial class Discipline
 
     public virtual Worker Creator { get; set; } = null!;
 
-    public virtual Faculty? Faculty { get; set; }
+    public virtual Faculty Faculty { get; set; } = null!;
 
     public virtual Holding HoldingNavigation { get; set; } = null!;
 

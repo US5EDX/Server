@@ -19,6 +19,11 @@ namespace Server.Services.Services
             return holdings.Select(HoldingMapper.MapToHoldingDto);
         }
 
+        public async Task<IEnumerable<short>> GetLastFive()
+        {
+            return await _holdingRepository.GetLastFive();
+        }
+
         public async Task<HoldingDto> AddHolding(HoldingDto holding)
         {
             var newHolding = await _holdingRepository.Add(HoldingMapper.MapToHolding(holding));
