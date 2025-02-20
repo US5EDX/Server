@@ -43,10 +43,28 @@ namespace Server.Data.Repositories
 
         public async Task<IEnumerable<User>> AddRange(List<User> users)
         {
-            await _context.Users.AddRangeAsync(users);
-            await _context.SaveChangesAsync();
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                await _context.Users.AddRangeAsync(users);
 
-            return users;
+                var students = users
+                    .Where(u => u.Student != null)
+                    .Select(u => u.Student)
+                    .ToList();
+
+                await _context.Students.AddRangeAsync(students);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return users;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<Student?> Update(Student student)
