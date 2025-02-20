@@ -47,6 +47,9 @@ builder.Services.AddScoped<DisciplinesService>();
 builder.Services.AddScoped<IRecordRepository, RecordRepository>();
 builder.Services.AddScoped<RecordsService>();
 
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<StudentsService>();
+
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<MailOptions>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.AddSingleton<JwtService>();

@@ -14,6 +14,11 @@ namespace Server.Data.Repositories
             _context = context;
         }
 
+        public async Task<Group?> GetById(uint id)
+        {
+            return await _context.Groups.FindAsync(id);
+        }
+
         public async Task<IEnumerable<Group>> GetByFacultyId(uint facultyId)
         {
             return await _context.Groups
@@ -35,7 +40,7 @@ namespace Server.Data.Repositories
             await _context.Groups.AddAsync(group);
             await _context.SaveChangesAsync();
 
-            return await GetById(group.GroupId);
+            return await GetByIdWithSpecialty(group.GroupId);
         }
 
         public async Task<Group?> Update(Group group)
@@ -54,7 +59,7 @@ namespace Server.Data.Repositories
 
             await _context.SaveChangesAsync();
 
-            return await GetById(existingGroup.GroupId);
+            return await GetByIdWithSpecialty(existingGroup.GroupId);
         }
 
         public async Task<bool?> Delete(uint groupId)
@@ -85,7 +90,7 @@ namespace Server.Data.Repositories
                         (g.Course + 1 == 5 || g.Course + 1 == 7 || g.Course + 1 == 13) ? 0 : g.Course + 1));
         }
 
-        private async Task<Group> GetById(uint groupId)
+        private async Task<Group> GetByIdWithSpecialty(uint groupId)
         {
             return await _context.Groups.Include(g => g.Specialty).FirstAsync(g => g.GroupId == groupId);
         }

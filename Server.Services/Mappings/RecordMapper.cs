@@ -23,5 +23,14 @@ namespace Server.Services.Mappings
                 Approved = record.Approved
             };
         }
+
+        public static RecordDiscAndStatusPairDto MapToPairDto(Record record)
+        {
+            return new RecordDiscAndStatusPairDto()
+            {
+                CodeName = $"{record.Discipline.DisciplineCode} {record.Discipline.DisciplineName}",
+                Approved = record.Approved
+            };
+        }
     }
 }

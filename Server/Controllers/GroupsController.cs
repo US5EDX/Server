@@ -18,6 +18,14 @@ namespace Server.Controllers
             _groupsService = groupsService;
         }
 
+        [Authorize]
+        [HttpGet("getGroupById/{groupId}")]
+        public async Task<IActionResult> GetGroupById(
+            [BindRequired][Range(1, uint.MaxValue - 1)] uint groupId)
+        {
+            return Ok(await _groupsService.GetGroupById(groupId));
+        }
+
         [Authorize(Roles = "2")]
         [HttpGet("getByFacultyId")]
         public async Task<IActionResult> GetGroups(

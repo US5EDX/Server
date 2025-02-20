@@ -8,6 +8,7 @@ namespace Server.Models.Interfaces
         Task<bool?> Delete(short eduYear);
         Task<IEnumerable<Holding>> GetAll();
         Task<IEnumerable<short>> GetLastFive();
+        Task<short> GetLastAsync();
         Task<Holding?> Update(Holding holding);
     }
 }

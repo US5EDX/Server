@@ -4,6 +4,7 @@ namespace Server.Models.Interfaces
 {
     public interface IGroupRepository
     {
+        Task<Group?> GetById(uint id);
         Task<IEnumerable<Group>> GetByFacultyId(uint facultyId);
         Task<IEnumerable<Group>> GetByFacultyIdAndCodeFilter(uint facultyId, string codeFilter);
         Task<Group> Add(Group group);

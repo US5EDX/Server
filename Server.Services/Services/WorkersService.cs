@@ -33,7 +33,7 @@ namespace Server.Services.Services
 
         public async Task<UserFullInfoDto> AddWorker(UserFullInfoDto worker)
         {
-            var user = UserMapper.MapToUserWithoutId(worker);
+            var user = UserMapper.MapToUserFromWorkerWithoutId(worker);
 
             Ulid ulid = Ulid.NewUlid();
 
@@ -70,7 +70,7 @@ namespace Server.Services.Services
 
         public async Task<UserFullInfoDto?> UpdateWorker(UserFullInfoDto worker)
         {
-            var user = UserMapper.MapToUserWithoutId(worker);
+            var user = UserMapper.MapToUserFromWorkerWithoutId(worker);
 
             var isSuccess = Ulid.TryParse(worker.Id, out Ulid ulidWorkerId);
 

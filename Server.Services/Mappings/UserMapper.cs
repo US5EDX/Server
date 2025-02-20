@@ -49,7 +49,7 @@ namespace Server.Services.Mappings
             };
         }
 
-        public static User MapToUserWithoutId(UserFullInfoDto worker)
+        public static User MapToUserFromWorkerWithoutId(UserFullInfoDto worker)
         {
             return new User()
             {
@@ -63,6 +63,35 @@ namespace Server.Services.Mappings
                     Position = worker.Position,
                     Group = worker.Group?.GroupId
                 }
+            };
+        }
+
+        public static User MapToUserFromStudentWithoutId(StudentRegistryDto student)
+        {
+            return new User()
+            {
+                Email = student.Email,
+                Role = 4,
+                Student = new Student()
+                {
+                    FullName = student.FullName,
+                    Faculty = student.Faculty,
+                    Group = student.Group,
+                    Headman = student.Headman,
+                }
+            };
+        }
+
+        public static StudentRegistryDto MapToStudentRegistry(User user)
+        {
+            return new StudentRegistryDto()
+            {
+                StudentId = new Ulid(user.Student.StudentId).ToString(),
+                Email = user.Email,
+                FullName = user.Student.FullName,
+                Faculty = user.Student.Faculty,
+                Group = user.Student.Group,
+                Headman = user.Student.Headman,
             };
         }
     }

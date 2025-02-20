@@ -18,6 +18,12 @@ namespace Server.Services.Services
             _groupRepository = groupRepository;
         }
 
+        public async Task<GroupDto?> GetGroupById(uint groupId)
+        {
+            var group = await _groupRepository.GetById(groupId);
+            return group == null ? null : GroupMapper.MapToGroupDto(group);
+        }
+
         public async Task<IEnumerable<GroupWithSpecialtyDto>> GetByFacultyId(uint facultyId)
         {
             var specialties = await _groupRepository.GetByFacultyId(facultyId);

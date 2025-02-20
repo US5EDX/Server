@@ -28,6 +28,15 @@ namespace Server.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<short> GetLastAsync()
+        {
+            var record = await _context.Holdings
+                .OrderByDescending(h => h.EduYear)
+                .FirstAsync();
+
+            return record.EduYear;
+        }
+
         public async Task<Holding> Add(Holding holding)
         {
             await _context.Holdings.AddAsync(holding);
