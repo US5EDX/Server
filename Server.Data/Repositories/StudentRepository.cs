@@ -41,6 +41,14 @@ namespace Server.Data.Repositories
             return user;
         }
 
+        public async Task<IEnumerable<User>> AddRange(List<User> users)
+        {
+            await _context.Users.AddRangeAsync(users);
+            await _context.SaveChangesAsync();
+
+            return users;
+        }
+
         public async Task<Student?> Update(Student student)
         {
             var existingStudent = await _context.Students.Include(s => s.User)

@@ -30,9 +30,14 @@ namespace Server.Controllers
         [HttpPost("addStudent")]
         public async Task<IActionResult> AddStudent([FromBody] StudentRegistryDto student)
         {
-            bool isParsed = int.TryParse(User.FindFirst(ClaimTypes.Role)?.Value, out int requestUserRole);
-
             return StatusCode(StatusCodes.Status201Created, await _studentsService.AddStudent(student));
+        }
+
+        [Authorize]
+        [HttpPost("addStudents")]
+        public async Task<IActionResult> AddStudents([FromBody] IEnumerable<StudentRegistryDto> students)
+        {
+            return StatusCode(StatusCodes.Status201Created, await _studentsService.AddStudents(students));
         }
 
         [Authorize]

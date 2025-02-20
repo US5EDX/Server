@@ -8,11 +8,13 @@ namespace Server.Services.Services
     {
         private readonly IStudentRepository _studentRepository;
         private readonly IHoldingRepository _holdingRepository;
+        private readonly IEmailService _emailService;
 
-        public StudentsService(IStudentRepository studentRepository, IHoldingRepository holdingRepository)
+        public StudentsService(IStudentRepository studentRepository, IHoldingRepository holdingRepository, IEmailService emailService)
         {
             _studentRepository = studentRepository;
             _holdingRepository = holdingRepository;
+            _emailService = emailService;
         }
 
         public async Task<IEnumerable<StudentWithRecordsDto>> GetWithLastReocorsByGroupId(uint groupId)
@@ -59,6 +61,59 @@ namespace Server.Services.Services
             //    "\n\nЗ повагою, ДНУ.");
 
             return UserMapper.MapToStudentRegistry(newStudent);
+        }
+
+        public async Task<IEnumerable<StudentRegistryDto>> AddStudents(IEnumerable<StudentRegistryDto> studentsRegistry)
+        {
+            var passwordList = new List<string>(studentsRegistry.Count());
+
+            var users = studentsRegistry.Select(studentRegistry =>
+            {
+                var user = UserMapper.MapToUserFromStudentWithoutId(studentRegistry);
+
+                Ulid ulid = Ulid.NewUlid();
+
+                user.UserId = ulid.ToByteArray();
+                user.Student.StudentId = ulid.ToByteArray();
+
+                var salt = GeneratorService.GenerateSalt();
+
+                //For development purposes
+
+                var password = "Test1234";
+                //var password = GeneratorService.GeneratePassword();
+
+                passwordList.Add(password);
+
+                var passwordHash = HasherService.GetPBKDF2Hash(password, salt);
+
+                user.Salt = salt;
+                user.Password = passwordHash;
+
+                return user;
+            }).ToList();
+
+            var newUsers = await _studentRepository.AddRange(users);
+
+            //While developmnet
+
+            //int index = 0;
+
+            //foreach (var newUser in newUsers)
+            //{
+            //    await _emailService.SendEmailAsync(newUser.Email, "Реєстрація у системі проведення вибору дисциплін",
+            //        "Доброго дня!\n" +
+            //        "Не забудьте після входу змінити тимчасовий пароль,\n" +
+            //        "і надійно його зберігайте.\n" +
+            //        $"Ваш логін для входу: {newUser.Email}\n" +
+            //        $"Тимчасовий пароль: {passwordList[index]}\n" +
+            //        "Вхід через:\n" +
+            //        "\n\nЗ повагою, ДНУ.");
+
+            //    index++;
+            //}
+
+            return newUsers.Select(UserMapper.MapToStudentRegistry);
         }
 
         public async Task<StudentRegistryDto?> UpdateStudent(StudentRegistryDto studentRegistry)
