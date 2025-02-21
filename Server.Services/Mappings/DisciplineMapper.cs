@@ -54,5 +54,14 @@ namespace Server.Services.Mappings
                 CreatorId = Ulid.Parse(discipline.CreatorId).ToByteArray()
             };
         }
+
+        public static DisciplineShortInfoDto MapToShortDisciplineInfo(Discipline discipline)
+        {
+            return new DisciplineShortInfoDto()
+            {
+                DisciplineId = discipline.DisciplineId,
+                DisciplineCodeName = $"{discipline.DisciplineCode} {discipline.DisciplineName}"
+            };
+        }
     }
 }

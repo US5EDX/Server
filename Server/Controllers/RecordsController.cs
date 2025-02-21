@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Server.Services.Dtos;
 using Server.Services.Services;
 using System.ComponentModel.DataAnnotations;
 
@@ -28,10 +29,71 @@ namespace Server.Controllers
 
         [Authorize(Roles = "2,3")]
         [HttpGet("getByStudentIdAndCourse")]
-        public async Task<IActionResult> GetStudentYearRecords([BindRequired][Length(26, 26)] string studentId,
+        public async Task<IActionResult> GetStudentYearsRecords([BindRequired][Length(26, 26)] string studentId,
             [BindRequired][Range(1, 12)] byte course)
         {
             return Ok(await _recordsService.GetByStudentIdAndCourse(studentId, course));
+        }
+
+        [Authorize(Roles = "2")]
+        [HttpGet("getStudentYearRecords")]
+        public async Task<IActionResult> GetStudentYearRecords([BindRequired][Length(26, 26)] string studentId,
+            [BindRequired][Range(2020, 2155)] short year)
+        {
+            return Ok(await _recordsService.GetRecordsByStudentIdAndYear(studentId, year));
+        }
+
+        [Authorize(Roles = "2")]
+        [HttpPost("addRecord")]
+        public async Task<IActionResult> AddRecord([FromBody] RecordRegistryDto record)
+        {
+            return StatusCode(StatusCodes.Status201Created, await _recordsService.AddRecord(record));
+        }
+
+        [Authorize(Roles = "2")]
+        [HttpPut("updateRecord")]
+        public async Task<IActionResult> UpdateRecord([FromBody] RecordRegistryDto record)
+        {
+            if (record.RecordId == 0)
+                return BadRequest("Невалідні дані");
+
+            var updatedDiscipline = await _recordsService.UpdateRecord(record);
+
+            if (updatedDiscipline is null)
+                return NotFound("Вказаний запис не знайдена");
+
+            return Ok(updatedDiscipline);
+        }
+
+        [Authorize(Roles = "2")]
+        [HttpDelete("deleteRecord/{recordId}")]
+        public async Task<IActionResult> DeleteDiscipline(
+            [BindRequired]
+            [Range(1, uint.MaxValue - 1)]
+            uint recordId)
+        {
+            var isDisciplineDeleted = await _recordsService.DeleteRecord(recordId);
+
+            if (isDisciplineDeleted is null)
+                return BadRequest("Неможливо видалити, оскільки запис затверджено");
+
+            if (isDisciplineDeleted == false)
+                return NotFound("Вказаний запис не знайдено");
+
+            return Ok();
+        }
+
+        [Authorize(Roles = "2")]
+        [HttpPut("updateRecordStatus/{recordId}")]
+        public async Task<IActionResult> UpdateStatus(
+            [BindRequired][Range(1, uint.MaxValue - 1)] uint recordId)
+        {
+            bool isSuccess = await _recordsService.UpdateStatus(recordId);
+
+            if (isSuccess)
+                return Ok();
+
+            return NotFound("Запис не знайдено");
         }
     }
 }

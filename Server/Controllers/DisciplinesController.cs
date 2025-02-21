@@ -52,6 +52,16 @@ namespace Server.Controllers
             return Ok(discipline);
         }
 
+        [Authorize]
+        [HttpGet("getShortInfo")]
+        public async Task<IActionResult> GetShortInfo([BindRequired][Range(2020, 2155)] short holding,
+            [BindRequired][Range(1, 3)] byte eduLevel,
+            [BindRequired][Range(1, 2)] byte semester,
+            [BindRequired][Length(1, 50)] string code)
+        {
+            return Ok(await _disciplinesService.GetByCodeSearchYearEduLevelSemester(code, holding, eduLevel, semester));
+        }
+
         [Authorize(Roles = "2,3")]
         [HttpPost("addDiscipline")]
         public async Task<IActionResult> AddDiscipline([FromBody] DisciplineFullInfoDto discipline)

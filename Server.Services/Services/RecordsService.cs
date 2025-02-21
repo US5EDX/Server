@@ -2,11 +2,6 @@
 using Server.Models.Models;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Server.Services.Services
 {
@@ -65,6 +60,49 @@ namespace Server.Services.Services
                     (2, new List<RecordDiscAndStatusPairDto>(0))
                 };
             });
+        }
+
+        public async Task<IEnumerable<RecordWithDisciplineInfoDto>> GetRecordsByStudentIdAndYear(string studentId, short year)
+        {
+            var isSuccess = Ulid.TryParse(studentId, out Ulid ulidStudentId);
+
+            if (!isSuccess)
+                throw new InvalidCastException("Невалідний Id");
+
+            var byteStudentId = ulidStudentId.ToByteArray();
+
+            var records = await _recordRepository.GetByStudentIdAndYear(byteStudentId, year);
+
+            return records.Select(RecordMapper.MapToRecordWithDisciplineDto);
+        }
+
+        public async Task<RecordWithDisciplineInfoDto> AddRecord(RecordRegistryDto record)
+        {
+            record.RecordId = 0;
+
+            var newRecord = await _recordRepository.Add(RecordMapper.MapToRecord(record));
+
+            return RecordMapper.MapToRecordWithDisciplineDto(newRecord);
+        }
+
+        public async Task<RecordWithDisciplineInfoDto?> UpdateRecord(RecordRegistryDto record)
+        {
+            var updatedRecord = await _recordRepository.Update(RecordMapper.MapToRecord(record));
+
+            if (updatedRecord is null)
+                return null;
+
+            return RecordMapper.MapToRecordWithDisciplineDto(updatedRecord);
+        }
+
+        public async Task<bool?> DeleteRecord(uint recordId)
+        {
+            return await _recordRepository.Delete(recordId);
+        }
+
+        public async Task<bool> UpdateStatus(uint recordId)
+        {
+            return await _recordRepository.UpdateStatus(recordId);
         }
 
         private int ChooseLimit(byte course)

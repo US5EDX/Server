@@ -43,6 +43,14 @@ namespace Server.Services.Services
             return discipline is null ? null : DisciplineMapper.MapToDisciplineFullInfoDto(discipline);
         }
 
+        public async Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearchYearEduLevelSemester(
+            string code, short year, byte eduLevel, byte semester)
+        {
+            var disciplines = await _disciplineRepository.GetShortInfoByCodeEduYearEduLevelSemester(code, year, eduLevel, semester);
+
+            return disciplines.Select(DisciplineMapper.MapToShortDisciplineInfo);
+        }
+
         public async Task<DisciplineFullInfoDto> AddDiscipline(DisciplineFullInfoDto discipline)
         {
             discipline.DisciplineId = 0;
