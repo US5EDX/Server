@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Server.Services.Dtos;
 using Server.Services.Services;
-using System.ComponentModel.DataAnnotations;
 
 namespace Server.Controllers
 {
@@ -20,8 +18,10 @@ namespace Server.Controllers
         [HttpPost("autologin")]
         public async Task<IActionResult> AutoLogin([FromBody] string refreshToken)
         {
-            if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized("Refresh token empty");
+            var valResult = ValidateToken(refreshToken);
+
+            if (valResult is not null)
+                return Unauthorized(valResult);
 
             var user = await _authService.AutoLogin(refreshToken);
 
@@ -45,8 +45,10 @@ namespace Server.Controllers
         [HttpPost("refresh")]
         public async Task<IActionResult> Resfresh([FromBody] string refreshToken)
         {
-            if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized("Refresh token empty");
+            var valResult = ValidateToken(refreshToken);
+
+            if (valResult is not null)
+                return Unauthorized(valResult);
 
             var tokens = await _authService.Refresh(refreshToken);
 
@@ -59,12 +61,25 @@ namespace Server.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] string refreshToken)
         {
-            if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized("Refresh token empty");
+            var valResult = ValidateToken(refreshToken);
+
+            if (valResult is not null)
+                return Unauthorized(valResult);
 
             await _authService.Logout(refreshToken);
 
-            return Ok("Logged out successfully");
+            return Ok();
+        }
+
+        private string? ValidateToken(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return "Refresh token empty";
+
+            if (token.Length != 32)
+                return "Unvalid token";
+
+            return null;
         }
     }
 }
