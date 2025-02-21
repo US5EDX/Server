@@ -25,5 +25,13 @@ namespace Server.Controllers
         {
             return Ok(await _recordsService.GetSignedStudents(disciplineId, semester));
         }
+
+        [Authorize(Roles = "2,3")]
+        [HttpGet("getByStudentIdAndCourse")]
+        public async Task<IActionResult> GetStudentYearRecords([BindRequired][Length(26, 26)] string studentId,
+            [BindRequired][Range(1, 12)] byte course)
+        {
+            return Ok(await _recordsService.GetByStudentIdAndCourse(studentId, course));
+        }
     }
 }

@@ -19,11 +19,11 @@ namespace Server.Data.Repositories
             return await _context.Holdings.ToListAsync();
         }
 
-        public async Task<IEnumerable<short>> GetLastFive()
+        public async Task<IEnumerable<short>> GetLastNYears(int limit)
         {
             return await _context.Holdings
                 .OrderByDescending(h => h.EduYear)
-                .Take(5)
+                .Take(limit)
                 .Select(h => h.EduYear)
                 .ToListAsync();
         }

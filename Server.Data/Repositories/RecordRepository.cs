@@ -31,5 +31,11 @@ namespace Server.Data.Repositories
                 .Where(r => r.DisciplineId == disciplineId && r.Semester == semester)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Record>> GetStudentRecordsByYears(byte[] studentId, IEnumerable<short> years)
+        {
+            return await _context.Records.Include(r => r.Discipline)
+                .Where(r => years.Contains(r.Holding) && r.StudentId == studentId).ToListAsync();
+        }
     }
 }

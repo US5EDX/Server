@@ -21,7 +21,7 @@ namespace Server.Services.Services
 
         public async Task<IEnumerable<short>> GetLastFive()
         {
-            return await _holdingRepository.GetLastFive();
+            return await _holdingRepository.GetLastNYears(5);
         }
 
         public async Task<HoldingDto> AddHolding(HoldingDto holding)
