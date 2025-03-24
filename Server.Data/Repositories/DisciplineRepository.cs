@@ -28,26 +28,6 @@ namespace Server.Data.Repositories
                 .CountAsync();
         }
 
-        public async Task<IEnumerable<Discipline>> GetDisciplines(int pageNumber, int pageSize, uint facultyId, short eduYear)
-        {
-            return await GetAllAsQueryable()
-                .Where(d => d.FacultyId == facultyId && d.Holding == eduYear)
-                .OrderBy(u => u.DisciplineCode)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Discipline>> GetDisciplines(int pageNumber, int pageSize, uint facultyId, short eduYear, byte catalogType)
-        {
-            return await GetAllAsQueryable()
-                .Where(d => d.FacultyId == facultyId && d.Holding == eduYear && d.CatalogType == catalogType)
-                .OrderBy(u => u.DisciplineCode)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-        }
-
         public async Task<Discipline?> GetById(uint disciplineId)
         {
             return await _context.Disciplines
@@ -129,14 +109,6 @@ namespace Server.Data.Repositories
             await _context.SaveChangesAsync();
 
             return true;
-        }
-
-        private IQueryable<Discipline> GetAllAsQueryable()
-        {
-            return _context.Disciplines
-                .Include(d => d.Faculty)
-                .Include(d => d.Specialty)
-                .AsQueryable();
         }
     }
 }

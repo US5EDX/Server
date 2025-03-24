@@ -1,10 +1,12 @@
 ﻿using Server.Models.Interfaces;
 using Server.Models.Models;
+using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,10 +15,12 @@ namespace Server.Services.Services
     public class DisciplinesService
     {
         private readonly IDisciplineRepository _disciplineRepository;
+        private readonly IDisciplineDtoRepository _disciplineDtoRepository;
 
-        public DisciplinesService(IDisciplineRepository disciplineRepository)
+        public DisciplinesService(IDisciplineRepository disciplineRepository, IDisciplineDtoRepository disciplineDtoRepository)
         {
             _disciplineRepository = disciplineRepository;
+            _disciplineDtoRepository = disciplineDtoRepository;
         }
 
         public async Task<int> GetCount(uint facultyId, short holdingFilter, byte? catalogFilter)
@@ -27,13 +31,14 @@ namespace Server.Services.Services
             return disciplineCount;
         }
 
-        public async Task<IEnumerable<DisciplineFullInfoDto>> GetDisciplines(int pageNumber, int pageSize,
+        public async Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines(int pageNumber, int pageSize,
             uint facultyId, short holdingFilter, byte? catalogFilter)
         {
-            var disciplines = catalogFilter is null ? await _disciplineRepository.GetDisciplines(pageNumber, pageSize, facultyId, holdingFilter) :
-                await _disciplineRepository.GetDisciplines(pageNumber, pageSize, facultyId, holdingFilter, catalogFilter.Value);
+            var disciplines = catalogFilter is null ?
+                await _disciplineDtoRepository.GetDisciplines(pageNumber, pageSize, facultyId, holdingFilter) :
+                await _disciplineDtoRepository.GetDisciplines(pageNumber, pageSize, facultyId, holdingFilter, catalogFilter.Value);
 
-            return disciplines.Select(DisciplineMapper.MapToDisciplineFullInfoDto);
+            return disciplines;
         }
 
         public async Task<DisciplineFullInfoDto?> GetById(uint disciplineId)
@@ -51,15 +56,17 @@ namespace Server.Services.Services
             return disciplines.Select(DisciplineMapper.MapToShortDisciplineInfo);
         }
 
-        public async Task<DisciplineFullInfoDto> AddDiscipline(DisciplineFullInfoDto discipline)
+        public async Task<DisciplineFullInfoDto> AddDiscipline(DisciplineFullInfoDto discipline, string userId)
         {
             discipline.DisciplineId = 0;
-            discipline.SubscribersCount = 0;
             discipline.IsOpen = true;
 
-            var newDiscipline = await _disciplineRepository.Add(DisciplineMapper.MapToDiscipline(discipline));
+            var newDiscipline = DisciplineMapper.MapToDiscipline(discipline);
+            newDiscipline.CreatorId = Ulid.Parse(userId).ToByteArray();
 
-            return DisciplineMapper.MapToDisciplineFullInfoDto(newDiscipline);
+            var addedDiscipline = await _disciplineRepository.Add(newDiscipline);
+
+            return DisciplineMapper.MapToDisciplineFullInfoDto(addedDiscipline);
         }
 
         public async Task<DisciplineFullInfoDto?> UpdateDiscipline(DisciplineFullInfoDto discipline)

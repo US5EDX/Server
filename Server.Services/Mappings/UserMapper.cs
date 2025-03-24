@@ -44,8 +44,9 @@ namespace Server.Services.Mappings
 
                 Position = user.Role < 4 ? user.Worker.Position : ("студент - " + user.Student.GroupNavigation.Course),
 
-                Group = user.Worker?.GroupNavigation is null ? null :
-                    GroupMapper.MapToGroupShortDto(user.Role < 4 ? user.Worker.GroupNavigation : user.Student.GroupNavigation)
+                Group = user.Worker?.GroupNavigation is null ?
+                (user.Student is null ? null : GroupMapper.MapToGroupShortDto(user.Student.GroupNavigation)) :
+                    GroupMapper.MapToGroupShortDto(user.Worker.GroupNavigation)
             };
         }
 

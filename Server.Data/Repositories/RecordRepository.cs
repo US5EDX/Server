@@ -33,65 +33,26 @@ namespace Server.Data.Repositories
                 .Where(r => years.Contains(r.Holding) && r.StudentId.SequenceEqual(studentId)).ToListAsync();
         }
 
-        public async Task<IEnumerable<Record>> GetByStudentIdAndYear(byte[] studentId, short year)
+        public async Task<uint> Add(Record record)
         {
-            return await _context.Records
-                .Include(r => r.Discipline)
-                .Where(r => r.Holding == year && r.StudentId.SequenceEqual(studentId))
-                .ToListAsync();
+            await _context.Records.AddAsync(record);
+            await _context.SaveChangesAsync();
+
+            return record.RecordId;
         }
 
-        public async Task<Record> Add(Record record)
+        public async Task<uint?> Update(Record record)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                await _context.Records.AddAsync(record);
-                await _context.SaveChangesAsync();
+            var existingRecord = await _context.Records.FindAsync(record.RecordId);
 
-                await UpdateSubscribersCount(record.DisciplineId, true);
+            if (existingRecord is null)
+                return null;
 
-                await transaction.CommitAsync();
+            existingRecord.DisciplineId = record.DisciplineId;
+            existingRecord.Approved = false;
+            await _context.SaveChangesAsync();
 
-                return _context.Records.Include(r => r.Discipline).First(r => r.RecordId == record.RecordId);
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        public async Task<Record?> Update(Record record)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                var existingRecord = await _context.Records.FindAsync(record.RecordId);
-
-                if (existingRecord is null)
-                    return null;
-
-                uint oldDisciplineId = existingRecord.DisciplineId;
-
-                existingRecord.DisciplineId = record.DisciplineId;
-                existingRecord.Approved = false;
-                await _context.SaveChangesAsync();
-
-                if (oldDisciplineId != record.DisciplineId)
-                {
-                    await UpdateSubscribersCount(oldDisciplineId, false);
-                    await UpdateSubscribersCount(record.DisciplineId, true);
-                }
-
-                await transaction.CommitAsync();
-                return _context.Records.Include(r => r.Discipline).First(r => r.RecordId == record.RecordId);
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
+            return existingRecord.RecordId;
         }
 
         public async Task<bool> UpdateStatus(uint recordId)
@@ -116,38 +77,15 @@ namespace Server.Data.Repositories
             if (hasDependencies)
                 return null;
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                var existingRecord = await _context.Records.FindAsync(recordId);
+            var existingRecord = await _context.Records.FindAsync(recordId);
 
-                if (existingRecord is null)
-                    return false;
+            if (existingRecord is null)
+                return false;
 
-                _context.Records.Remove(existingRecord);
-                await _context.SaveChangesAsync();
+            _context.Records.Remove(existingRecord);
+            await _context.SaveChangesAsync();
 
-                await UpdateSubscribersCount(existingRecord.DisciplineId, false);
-
-                await transaction.CommitAsync();
-                return true;
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        private async Task UpdateSubscribersCount(uint disciplineId, bool IsAdded)
-        {
-            var discipline = await _context.Disciplines.FindAsync(disciplineId);
-
-            if (discipline is not null)
-            {
-                discipline.SubscribersCount = IsAdded ? discipline.SubscribersCount + 1 : discipline.SubscribersCount - 1;
-                await _context.SaveChangesAsync();
-            }
+            return true;
         }
     }
 }

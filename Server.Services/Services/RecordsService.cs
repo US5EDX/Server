@@ -1,5 +1,6 @@
 ﻿using Server.Models.Interfaces;
 using Server.Models.Models;
+using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
 
@@ -8,11 +9,14 @@ namespace Server.Services.Services
     public class RecordsService
     {
         private IRecordRepository _recordRepository;
+        private IRecordDtoRepository _recordDtoRepository;
         private IHoldingRepository _holdingRepository;
 
-        public RecordsService(IRecordRepository recordRepository, IHoldingRepository holdingRepository)
+        public RecordsService(IRecordRepository recordRepository, IRecordDtoRepository recordDtoRepository,
+            IHoldingRepository holdingRepository)
         {
             _recordRepository = recordRepository;
+            _recordDtoRepository = recordDtoRepository;
             _holdingRepository = holdingRepository;
         }
 
@@ -71,28 +75,26 @@ namespace Server.Services.Services
 
             var byteStudentId = ulidStudentId.ToByteArray();
 
-            var records = await _recordRepository.GetByStudentIdAndYear(byteStudentId, year);
-
-            return records.Select(RecordMapper.MapToRecordWithDisciplineDto);
+            return await _recordDtoRepository.GetByStudentIdAndYear(byteStudentId, year);
         }
 
         public async Task<RecordWithDisciplineInfoDto> AddRecord(RecordRegistryDto record)
         {
             record.RecordId = 0;
 
-            var newRecord = await _recordRepository.Add(RecordMapper.MapToRecord(record));
+            var newRecordId = await _recordRepository.Add(RecordMapper.MapToRecord(record));
 
-            return RecordMapper.MapToRecordWithDisciplineDto(newRecord);
+            return await _recordDtoRepository.GetWithDisciplineById(newRecordId);
         }
 
         public async Task<RecordWithDisciplineInfoDto?> UpdateRecord(RecordRegistryDto record)
         {
-            var updatedRecord = await _recordRepository.Update(RecordMapper.MapToRecord(record));
+            var updatedRecordId = await _recordRepository.Update(RecordMapper.MapToRecord(record));
 
-            if (updatedRecord is null)
+            if (updatedRecordId is null)
                 return null;
 
-            return RecordMapper.MapToRecordWithDisciplineDto(updatedRecord);
+            return await _recordDtoRepository.GetWithDisciplineById(updatedRecordId.Value);
         }
 
         public async Task<bool?> DeleteRecord(uint recordId)

@@ -5,9 +5,9 @@ namespace Server.Services.Mappings
 {
     public class SpecialtyMapper
     {
-        public static SpecialtyDto MapToSpecialtyDto(Specialty specialty)
+        public static SpecialtyDto? MapToSpecialtyDto(Specialty? specialty)
         {
-            return new SpecialtyDto()
+            return specialty is null ? null : new SpecialtyDto()
             {
                 SpecialtyId = specialty.SpecialtyId,
                 SpecialtyName = specialty.SpecialtyName,

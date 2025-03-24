@@ -4,6 +4,7 @@ using Server.Data.Extensions;
 using Server.Data.Repositories;
 using Server.Middleware;
 using Server.Models.Interfaces;
+using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Services;
 using System.Text;
@@ -42,9 +43,11 @@ builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<GroupsService>();
 
 builder.Services.AddScoped<IDisciplineRepository, DisciplineRepository>();
+builder.Services.AddScoped<IDisciplineDtoRepository, DisciplineDtoRepository>();
 builder.Services.AddScoped<DisciplinesService>();
 
 builder.Services.AddScoped<IRecordRepository, RecordRepository>();
+builder.Services.AddScoped<IRecordDtoRepository, RecordDtoRepository>();
 builder.Services.AddScoped<RecordsService>();
 
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();

@@ -56,8 +56,6 @@ public partial class Discipline
 
     public string Url { get; set; } = null!;
 
-    public int SubscribersCount { get; set; }
-
     public short Holding { get; set; }
 
     public bool IsOpen { get; set; }

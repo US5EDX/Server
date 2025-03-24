@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 using Server.Models.Models;
 
@@ -96,7 +97,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasComment("0 - both\n1 - non-pair\n2 - pair")
                 .HasColumnName("semester");
             entity.Property(e => e.SpecialtyId).HasColumnName("specialtyId");
-            entity.Property(e => e.SubscribersCount).HasColumnName("subscribersCount");
             entity.Property(e => e.Url)
                 .HasMaxLength(1000)
                 .HasColumnName("url");
@@ -187,6 +187,8 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.HasIndex(e => e.Holding, "fk_record_holding");
 
             entity.HasIndex(e => e.StudentId, "fk_record_student");
+
+            entity.HasIndex(e => new { e.DisciplineId, e.Holding, e.Semester }, "idx_records_discipline_holding_semester");
 
             entity.Property(e => e.RecordId).HasColumnName("recordId");
             entity.Property(e => e.Approved).HasColumnName("approved");

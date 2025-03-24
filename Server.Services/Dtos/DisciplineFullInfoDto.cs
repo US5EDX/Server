@@ -63,19 +63,11 @@ namespace Server.Services.Dtos
         public string Url { get; set; }
 
         [Required]
-        [Range(0, int.MaxValue - 1)]
-        public int SubscribersCount { get; set; }
-
-        [Required]
         [Range(2020, 2155)]
         public short Holding { get; set; }
 
         [Required]
         public bool IsOpen { get; set; }
-
-        [Required]
-        [Length(26, 26)]
-        public string CreatorId { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

@@ -23,10 +23,8 @@ namespace Server.Services.Mappings
                 MaxCount = discipline.MaxCount,
                 MinCount = discipline.MinCount,
                 Url = discipline.Url,
-                SubscribersCount = discipline.SubscribersCount,
                 Holding = discipline.Holding,
                 IsOpen = discipline.IsOpen,
-                CreatorId = new Ulid(discipline.CreatorId).ToString()
             };
         }
 
@@ -48,10 +46,8 @@ namespace Server.Services.Mappings
                 MaxCount = discipline.MaxCount,
                 MinCount = discipline.MinCount,
                 Url = discipline.Url,
-                SubscribersCount = discipline.SubscribersCount,
                 Holding = discipline.Holding,
-                IsOpen = discipline.IsOpen,
-                CreatorId = Ulid.Parse(discipline.CreatorId).ToByteArray()
+                IsOpen = discipline.IsOpen
             };
         }
 

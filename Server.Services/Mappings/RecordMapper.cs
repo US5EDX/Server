@@ -33,24 +33,6 @@ namespace Server.Services.Mappings
             };
         }
 
-        public static RecordWithDisciplineInfoDto MapToRecordWithDisciplineDto(Record record)
-        {
-            return new RecordWithDisciplineInfoDto()
-            {
-                RecordId = record.RecordId,
-                ChosenSemester = record.Semester,
-                Approved = record.Approved,
-                DisciplineId = record.Discipline.DisciplineId,
-                DisciplineCode = record.Discipline.DisciplineCode,
-                DisciplineName = record.Discipline.DisciplineName,
-                Course = record.Discipline.Course,
-                EduLevel = record.Discipline.EduLevel,
-                Semester = record.Discipline.Semester,
-                SubscribersCount = record.Discipline.SubscribersCount,
-                IsOpen = record.Discipline.IsOpen,
-            };
-        }
-
         public static Record MapToRecord(RecordRegistryDto record)
         {
             return new Record()

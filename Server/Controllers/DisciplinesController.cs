@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Server.Services.Dtos;
 using Server.Services.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace Server.Controllers
 {
@@ -66,7 +66,12 @@ namespace Server.Controllers
         [HttpPost("addDiscipline")]
         public async Task<IActionResult> AddDiscipline([FromBody] DisciplineFullInfoDto discipline)
         {
-            return StatusCode(StatusCodes.Status201Created, await _disciplinesService.AddDiscipline(discipline));
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId is null)
+                return BadRequest("Неможливо виконати дію");
+
+            return StatusCode(StatusCodes.Status201Created, await _disciplinesService.AddDiscipline(discipline, userId));
         }
 
         [Authorize(Roles = "2,3")]
