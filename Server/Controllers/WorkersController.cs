@@ -36,6 +36,15 @@ namespace Server.Controllers
             return Ok(await _workersService.GetWorkers(pageNumber, pageSize, facultyFilter));
         }
 
+        [Authorize(Roles = "2")]
+        [HttpGet("getByFacultyAndFullName")]
+        public async Task<IActionResult> GetByFacultyAndFullName(
+            [Required][Range(1, uint.MaxValue - 1)] uint facultyId,
+            [Required][Length(3, 150)] string fullName)
+        {
+            return Ok(await _workersService.GetByFacultyAndFullName(facultyId, fullName));
+        }
+
         [Authorize(Roles = "1,2")]
         [HttpPost("addWorker")]
         public async Task<IActionResult> AddWorker([FromBody] UserFullInfoDto worker)

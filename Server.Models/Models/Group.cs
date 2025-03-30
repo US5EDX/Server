@@ -30,9 +30,11 @@ public partial class Group
     /// </summary>
     public byte Parsemester { get; set; }
 
+    public byte[]? CuratorId { get; set; }
+
+    public virtual Worker? Curator { get; set; }
+
     public virtual Specialty Specialty { get; set; } = null!;
 
     public virtual ICollection<Student> Students { get; set; } = new List<Student>();
-
-    public virtual ICollection<Worker> Workers { get; set; } = new List<Worker>();
 }

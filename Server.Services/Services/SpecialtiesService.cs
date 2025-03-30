@@ -22,7 +22,7 @@ namespace Server.Services.Services
         public async Task<SpecialtyDto> AddSpecialty(SpecialtyDto specialty)
         {
             var newSpecialty = await _specialtyRepository.Add(
-                new Models.Models.Specialty() { SpecialtyName = specialty.SpecialtyName, FacultyId = specialty.FacultyId });
+                new Models.Models.Specialty() { SpecialtyName = specialty.SpecialtyName, FacultyId = specialty.FacultyId.Value });
 
             return SpecialtyMapper.MapToSpecialtyDto(newSpecialty);
         }

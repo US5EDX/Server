@@ -31,6 +31,7 @@ builder.Services.AddScoped<IHoldingRepository, HoldingRepository>();
 builder.Services.AddScoped<HoldingsService>();
 
 builder.Services.AddScoped<IWorkerRepository, WorkerRepository>();
+builder.Services.AddScoped<IWorkerDtoRepository, WorkerDtoRepository>();
 builder.Services.AddScoped<WorkersService>();
 
 builder.Services.AddScoped<ISpecialtyRepository, SpecialtyRepository>();

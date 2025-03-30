@@ -1,11 +1,6 @@
 ﻿using Server.Models.Interfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Server.Services.Services
 {
@@ -24,33 +19,37 @@ namespace Server.Services.Services
             return group == null ? null : GroupMapper.MapToGroupDto(group);
         }
 
-        public async Task<IEnumerable<GroupWithSpecialtyDto>> GetByFacultyId(uint facultyId)
+        public async Task<IEnumerable<GroupFullInfoDto>> GetByFacultyId(uint facultyId)
         {
             var specialties = await _groupRepository.GetByFacultyId(facultyId);
-            return specialties.Select(GroupMapper.MapToGroupWithSpecialtyDto);
+            return specialties.Select(GroupMapper.MapToGroupFullInfo);
         }
 
-        public async Task<IEnumerable<GroupShortDto>> GetByFacultyIdAndCodeFilter(uint facultyId, string codeFilter)
+        public async Task<GroupFullInfoDto> AddGroup(GroupRegistryDto group)
         {
-            var specialties = await _groupRepository.GetByFacultyIdAndCodeFilter(facultyId, codeFilter);
-            return specialties.Select(GroupMapper.MapToGroupShortDto);
+            var newGroup = GroupMapper.MapToGroupWithoutCuratorId(group);
+
+            if (group.CuratorId is not null)
+                newGroup.CuratorId = GetWorkerIdAsByteArray(group.CuratorId);
+
+            var addedGroup = await _groupRepository.Add(newGroup);
+
+            return GroupMapper.MapToGroupFullInfo(addedGroup);
         }
 
-        public async Task<GroupWithSpecialtyDto> AddGroup(GroupWithSpecialtyDto group)
+        public async Task<GroupFullInfoDto?> UpdateGroup(GroupRegistryDto group)
         {
-            var newGroup = await _groupRepository.Add(GroupMapper.MapToGroup(group));
+            var updatingGroup = GroupMapper.MapToGroupWithoutCuratorId(group);
 
-            return GroupMapper.MapToGroupWithSpecialtyDto(newGroup);
-        }
+            if (group.CuratorId is not null)
+                updatingGroup.CuratorId = GetWorkerIdAsByteArray(group.CuratorId);
 
-        public async Task<GroupWithSpecialtyDto?> UpdateGroup(GroupWithSpecialtyDto group)
-        {
-            var updatedGroup = await _groupRepository.Update(GroupMapper.MapToGroup(group));
+            var updatedGroup = await _groupRepository.Update(updatingGroup);
 
             if (updatedGroup is null)
                 return null;
 
-            return GroupMapper.MapToGroupWithSpecialtyDto(updatedGroup);
+            return GroupMapper.MapToGroupFullInfo(updatedGroup);
         }
 
         public async Task<bool?> DeleteGroup(uint groupId)
@@ -61,6 +60,16 @@ namespace Server.Services.Services
         public async Task UpdateGroupsCourse(uint facultyId)
         {
             await _groupRepository.UpdateGroupsCourse(facultyId);
+        }
+
+        private byte[] GetWorkerIdAsByteArray(string workerId)
+        {
+            var isSuccess = Ulid.TryParse(workerId, out Ulid ulidWorkerId);
+
+            if (!isSuccess)
+                throw new InvalidCastException("Невалідний Id");
+
+            return ulidWorkerId.ToByteArray();
         }
     }
 }

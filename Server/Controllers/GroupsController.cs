@@ -35,29 +35,17 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "2")]
-        [HttpGet("getGroupsByCodeSearch")]
-        public async Task<IActionResult> GetGroups(
-            [BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId,
-            [BindRequired][Length(1, 30)] string codeFilter)
-        {
-            return Ok(await _groupsService.GetByFacultyIdAndCodeFilter(facultyId, codeFilter));
-        }
-
-        [Authorize(Roles = "2")]
         [HttpPost("addGroup")]
-        public async Task<IActionResult> AddGroup([FromBody] GroupWithSpecialtyDto group)
+        public async Task<IActionResult> AddGroup([FromBody] GroupRegistryDto group)
         {
-            if (group.Specialty.FacultyId < 1 || group.Specialty.FacultyId > (uint.MaxValue - 1))
-                return BadRequest("Невалідні вхідні дані");
-
             return StatusCode(StatusCodes.Status201Created, await _groupsService.AddGroup(group));
         }
 
         [Authorize(Roles = "2")]
         [HttpPut("updateGroup")]
-        public async Task<IActionResult> UpdateGroup([FromBody] GroupWithSpecialtyDto group)
+        public async Task<IActionResult> UpdateGroup([FromBody] GroupRegistryDto group)
         {
-            if (group.GroupId < 1 || group.GroupId > (uint.MaxValue - 1))
+            if (group.GroupId is null)
                 return BadRequest("Невалідні вхідні дані");
 
             var updatedSpecialty = await _groupsService.UpdateGroup(group);

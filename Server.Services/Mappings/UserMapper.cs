@@ -12,8 +12,7 @@ namespace Server.Services.Mappings
                 FullName = worker.FullName,
                 Faculty = FacultyMapper.MapToFacultyDto(worker.FacultyNavigation),
                 Department = worker.Department,
-                Position = worker.Position,
-                Group = worker.Group
+                Position = worker.Position
             };
         }
 
@@ -36,17 +35,14 @@ namespace Server.Services.Mappings
                 Email = user.Email,
                 Role = user.Role,
 
-                FullName = user.Role < 4 ? user.Worker.FullName : user.Student.FullName,
+                FullName = user.Worker is not null ? user.Worker.FullName : user.Student.FullName,
 
-                Faculty = FacultyMapper.MapToFacultyDto(user.Role < 4 ? user.Worker.FacultyNavigation : user.Student.FacultyNavigation),
+                Faculty = FacultyMapper.MapToFacultyDto(user.Worker is not null ?
+                user.Worker.FacultyNavigation : user.Student.FacultyNavigation),
 
-                Department = user.Role < 4 ? user.Worker.Department : "-",
+                Department = user.Worker is not null ? user.Worker.Department : user.Student.GroupNavigation.GroupCode,
 
-                Position = user.Role < 4 ? user.Worker.Position : ("студент - " + user.Student.GroupNavigation.Course),
-
-                Group = user.Worker?.GroupNavigation is null ?
-                (user.Student is null ? null : GroupMapper.MapToGroupShortDto(user.Student.GroupNavigation)) :
-                    GroupMapper.MapToGroupShortDto(user.Worker.GroupNavigation)
+                Position = user.Worker is not null ? user.Worker.Position : ("студент - " + user.Student.GroupNavigation.Course),
             };
         }
 
@@ -61,8 +57,7 @@ namespace Server.Services.Mappings
                     FullName = worker.FullName,
                     Faculty = worker.Faculty.FacultyId,
                     Department = worker.Department,
-                    Position = worker.Position,
-                    Group = worker.Group?.GroupId
+                    Position = worker.Position
                 }
             };
         }

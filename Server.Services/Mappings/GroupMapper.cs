@@ -18,18 +18,9 @@ namespace Server.Services.Mappings
             };
         }
 
-        public static GroupShortDto MapToGroupShortDto(Group group)
+        public static GroupFullInfoDto MapToGroupFullInfo(Group group)
         {
-            return new GroupShortDto()
-            {
-                GroupId = group.GroupId,
-                GroupCode = group.GroupCode,
-            };
-        }
-
-        public static GroupWithSpecialtyDto MapToGroupWithSpecialtyDto(Group group)
-        {
-            return new GroupWithSpecialtyDto()
+            return new GroupFullInfoDto()
             {
                 GroupId = group.GroupId,
                 GroupCode = group.GroupCode,
@@ -37,17 +28,18 @@ namespace Server.Services.Mappings
                 EduLevel = group.EduLevel,
                 Course = group.Course,
                 Nonparsemester = group.Nonparsemester,
-                Parsemester = group.Parsemester
+                Parsemester = group.Parsemester,
+                CuratorInfo = group.Curator is null ? null : WorkerMapper.MapToWorkerShortInfoDto(group.Curator)
             };
         }
 
-        public static Group MapToGroup(GroupWithSpecialtyDto group)
+        public static Group MapToGroupWithoutCuratorId(GroupRegistryDto group)
         {
             return new Group()
             {
                 GroupId = group.GroupId ?? 0,
                 GroupCode = group.GroupCode,
-                SpecialtyId = group.Specialty.SpecialtyId,
+                SpecialtyId = group.SpecialtyId,
                 EduLevel = group.EduLevel,
                 Course = group.Course,
                 Nonparsemester = group.Nonparsemester,

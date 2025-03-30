@@ -156,10 +156,19 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasComment("disciplines count on par semester")
                 .HasColumnName("parsemester");
             entity.Property(e => e.SpecialtyId).HasColumnName("specialtyId");
+            entity.Property(e => e.CuratorId)
+                .HasMaxLength(16)
+                .IsFixedLength()
+                .HasColumnName("curatorId");
 
             entity.HasOne(d => d.Specialty).WithMany(p => p.Groups)
                 .HasForeignKey(d => d.SpecialtyId)
                 .HasConstraintName("fk_group_specialty");
+
+            entity.HasOne(d => d.Curator).WithMany(p => p.Groups)
+                .HasForeignKey(d => d.CuratorId)
+                .HasConstraintName("fk_group_worker")
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Holding>(entity =>
@@ -320,8 +329,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
 
             entity.HasIndex(e => e.Faculty, "fk_worker_faculty");
 
-            entity.HasIndex(e => e.Group, "group_UNIQUE").IsUnique();
-
             entity.Property(e => e.WorkerId)
                 .HasMaxLength(16)
                 .HasDefaultValueSql("uuid_to_bin(uuid(),1)")
@@ -334,9 +341,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.Property(e => e.FullName)
                 .HasMaxLength(150)
                 .HasColumnName("fullName");
-            entity.Property(e => e.Group)
-                .HasComment("if worker is curator he assinged to his group")
-                .HasColumnName("group");
             entity.Property(e => e.Position)
                 .HasMaxLength(100)
                 .HasColumnName("position");
@@ -344,10 +348,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.HasOne(d => d.FacultyNavigation).WithMany(p => p.Workers)
                 .HasForeignKey(d => d.Faculty)
                 .HasConstraintName("fk_worker_faculty");
-
-            entity.HasOne(d => d.GroupNavigation).WithMany(p => p.Workers)
-                .HasForeignKey(d => d.Group)
-                .HasConstraintName("fk_worker_group");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -57,7 +57,6 @@ namespace Server.Data.Repositories
             if (roleFilter == 3)
                 return await _context.Users
                     .Include(u => u.Worker).ThenInclude(w => w.FacultyNavigation)
-                    .Include(u => u.Worker).ThenInclude(w => w.GroupNavigation)
                     .OrderBy(u => u.UserId)
                     .Where(u => u.Role == roleFilter && u.Worker.Faculty == facultyId)
                     .Skip((pageNumber - 1) * pageSize)
@@ -81,7 +80,6 @@ namespace Server.Data.Repositories
         {
             return _context.Users
                 .Include(u => u.Worker).ThenInclude(w => w.FacultyNavigation)
-                .Include(u => u.Worker).ThenInclude(w => w.GroupNavigation)
                 .Include(u => u.Student).ThenInclude(s => s.FacultyNavigation)
                 .Include(u => u.Student).ThenInclude(s => s.GroupNavigation)
                 .AsQueryable();

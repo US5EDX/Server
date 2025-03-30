@@ -23,15 +23,8 @@ namespace Server.Data.Repositories
         {
             return await _context.Groups
                 .Include(g => g.Specialty)
+                .Include(g => g.Curator)
                 .Where(g => g.Specialty.FacultyId == facultyId)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Group>> GetByFacultyIdAndCodeFilter(uint facultyId, string codeFilter)
-        {
-            return await _context.Groups
-                .Include(g => g.Specialty)
-                .Where(g => g.Specialty.FacultyId == facultyId && g.GroupCode.StartsWith(codeFilter))
                 .ToListAsync();
         }
 
@@ -40,7 +33,7 @@ namespace Server.Data.Repositories
             await _context.Groups.AddAsync(group);
             await _context.SaveChangesAsync();
 
-            return await GetByIdWithSpecialty(group.GroupId);
+            return await GetByIdFullInfo(group.GroupId);
         }
 
         public async Task<Group?> Update(Group group)
@@ -56,10 +49,11 @@ namespace Server.Data.Repositories
             existingGroup.EduLevel = group.EduLevel;
             existingGroup.Nonparsemester = group.Nonparsemester;
             existingGroup.Parsemester = group.Parsemester;
+            existingGroup.CuratorId = group.CuratorId;
 
             await _context.SaveChangesAsync();
 
-            return await GetByIdWithSpecialty(existingGroup.GroupId);
+            return await GetByIdFullInfo(existingGroup.GroupId);
         }
 
         public async Task<bool?> Delete(uint groupId)
@@ -90,9 +84,12 @@ namespace Server.Data.Repositories
                         (g.Course + 1 == 5 || g.Course + 1 == 7 || g.Course + 1 == 13) ? 0 : g.Course + 1));
         }
 
-        private async Task<Group> GetByIdWithSpecialty(uint groupId)
+        private async Task<Group> GetByIdFullInfo(uint groupId)
         {
-            return await _context.Groups.Include(g => g.Specialty).FirstAsync(g => g.GroupId == groupId);
+            return await _context.Groups
+                .Include(g => g.Specialty)
+                .Include(g => g.Curator)
+                .FirstAsync(g => g.GroupId == groupId);
         }
     }
 }

@@ -89,7 +89,6 @@ namespace Server.Data.Repositories
                 existingUser.Worker.Faculty = user.Worker.Faculty;
                 existingUser.Worker.Department = user.Worker.Department;
                 existingUser.Worker.Position = user.Worker.Position;
-                existingUser.Worker.Group = user.Worker.Group;
             }
 
             await _context.SaveChangesAsync();
@@ -127,7 +126,6 @@ namespace Server.Data.Repositories
         {
             return _context.Users
                 .Include(u => u.Worker).ThenInclude(w => w.FacultyNavigation)
-                .Include(u => u.Worker).ThenInclude(w => w.GroupNavigation)
                 .AsQueryable();
         }
     }

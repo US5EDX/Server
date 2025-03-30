@@ -18,16 +18,11 @@ public partial class Worker
 
     public string Position { get; set; } = null!;
 
-    /// <summary>
-    /// if worker is curator he assinged to his group
-    /// </summary>
-    public uint? Group { get; set; }
-
     public virtual ICollection<Discipline> Disciplines { get; set; } = new List<Discipline>();
 
-    public virtual Faculty FacultyNavigation { get; set; } = null!;
+    public virtual ICollection<Group> Groups { get; set; } = new List<Group>();
 
-    public virtual Group? GroupNavigation { get; set; }
+    public virtual Faculty FacultyNavigation { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
 }

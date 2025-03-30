@@ -32,7 +32,7 @@ namespace Server.Controllers
         [HttpPost("addSpecialty")]
         public async Task<IActionResult> AddSpecialty([FromBody] SpecialtyDto specialty)
         {
-            if (specialty.FacultyId < 1 || specialty.FacultyId > (uint.MaxValue - 1))
+            if (specialty.FacultyId is null)
                 return BadRequest("Невалідні вхідні дані");
 
             return StatusCode(StatusCodes.Status201Created, await _specialtiesService.AddSpecialty(specialty));
@@ -42,7 +42,7 @@ namespace Server.Controllers
         [HttpPut("updateSpecialty")]
         public async Task<IActionResult> UpdateSpecialty([FromBody] SpecialtyDto specialty)
         {
-            if (specialty.SpecialtyId < 1 || specialty.SpecialtyId > (uint.MaxValue - 1))
+            if (specialty.SpecialtyId is null || specialty.SpecialtyId == 0)
                 return BadRequest("Невалідні вхідні дані");
 
             var updatedSpecialty = await _specialtiesService.UpdateSpecialty(specialty);

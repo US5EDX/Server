@@ -9,7 +9,5 @@
         public string Department { get; set; }
 
         public string Position { get; set; }
-
-        public uint? Group { get; set; }
     }
 }

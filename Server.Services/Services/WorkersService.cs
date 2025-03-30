@@ -1,4 +1,5 @@
 ﻿using Server.Models.Interfaces;
+using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
 
@@ -7,11 +8,14 @@ namespace Server.Services.Services
     public class WorkersService
     {
         private readonly IWorkerRepository _workerRepository;
+        private readonly IWorkerDtoRepository _workerDtoRepository;
         private readonly IEmailService _emailService;
 
-        public WorkersService(IWorkerRepository workerRepository, IEmailService emailService)
+        public WorkersService(IWorkerRepository workerRepository, IWorkerDtoRepository workerDtoRepository,
+            IEmailService emailService)
         {
             _workerRepository = workerRepository;
+            _workerDtoRepository = workerDtoRepository;
             _emailService = emailService;
         }
 
@@ -29,6 +33,11 @@ namespace Server.Services.Services
                 await _workerRepository.GetWorkers(pageNumber, pageSize, facultyFilter.Value);
 
             return workers.Select(UserMapper.MapToUserFullInfoDto);
+        }
+
+        public async Task<IEnumerable<WorkerShortInfoDto>> GetByFacultyAndFullName(uint faculty, string fullName)
+        {
+            return await _workerDtoRepository.GetByFacultyAndFullName(faculty, fullName);
         }
 
         public async Task<UserFullInfoDto> AddWorker(UserFullInfoDto worker)

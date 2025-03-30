@@ -19,9 +19,9 @@ namespace Server.Services.Mappings
         {
             return new Specialty()
             {
-                SpecialtyId = specailty.SpecialtyId,
+                SpecialtyId = specailty.SpecialtyId ?? 0,
                 SpecialtyName = specailty.SpecialtyName,
-                FacultyId = specailty.FacultyId
+                FacultyId = specailty.FacultyId ?? 0
             };
         }
     }
