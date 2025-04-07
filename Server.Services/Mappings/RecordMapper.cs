@@ -33,6 +33,15 @@ namespace Server.Services.Mappings
             };
         }
 
+        public static RecordDiscAndStatusPairDto MapToPairDto(StudentYearsRecordsDto record)
+        {
+            return new RecordDiscAndStatusPairDto()
+            {
+                CodeName = $"{record.DisciplineCode} {record.DisciplineName}",
+                Approved = record.Approved
+            };
+        }
+
         public static Record MapToRecord(RecordRegistryDto record)
         {
             return new Record()

@@ -66,20 +66,10 @@ namespace Server.Controllers
             var isGroupDeleted = await _groupsService.DeleteGroup(groupId);
 
             if (isGroupDeleted is null)
-                return BadRequest("Неможливо видалити, оскільки група вказана як поточна");
+                return BadRequest("Неможливо видалити, оскільки у групі є студенти або група ще не закінчила навчання");
 
             if (isGroupDeleted == false)
                 return NotFound("Вказана група не знайдена");
-
-            return Ok();
-        }
-
-        [Authorize(Roles = "2")]
-        [HttpPut("updateGroupsCourse/{facultyId}")]
-        public async Task<IActionResult> UpdateGroupsCourse(
-            [BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId)
-        {
-            await _groupsService.UpdateGroupsCourse(facultyId);
 
             return Ok();
         }

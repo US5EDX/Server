@@ -1,5 +1,6 @@
 ﻿using Server.Models.Models;
 using Server.Services.Dtos;
+using Server.Services.Services;
 
 namespace Server.Services.Mappings
 {
@@ -42,7 +43,8 @@ namespace Server.Services.Mappings
 
                 Department = user.Worker is not null ? user.Worker.Department : user.Student.GroupNavigation.GroupCode,
 
-                Position = user.Worker is not null ? user.Worker.Position : ("студент - " + user.Student.GroupNavigation.Course),
+                Position = user.Worker is not null ? user.Worker.Position :
+                ("студент - " + CalcuationService.CalculateGroupCourse(user.Student.GroupNavigation)),
             };
         }
 

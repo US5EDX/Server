@@ -1,5 +1,6 @@
 ﻿using Server.Models.Models;
 using Server.Services.Dtos;
+using Server.Services.Services;
 
 namespace Server.Services.Mappings
 {
@@ -12,9 +13,12 @@ namespace Server.Services.Mappings
                 GroupId = group.GroupId,
                 GroupCode = group.GroupCode,
                 EduLevel = group.EduLevel,
-                Course = group.Course,
+                Course = CalcuationService.CalculateGroupCourse(group),
+                DurationOfStudy = group.DurationOfStudy,
+                AdmissionYear = group.AdmissionYear,
                 Nonparsemester = group.Nonparsemester,
-                Parsemester = group.Parsemester
+                Parsemester = group.Parsemester,
+                HasEnterChoise = group.HasEnterChoise
             };
         }
 
@@ -26,9 +30,12 @@ namespace Server.Services.Mappings
                 GroupCode = group.GroupCode,
                 Specialty = SpecialtyMapper.MapToSpecialtyDto(group.Specialty),
                 EduLevel = group.EduLevel,
-                Course = group.Course,
+                Course = CalcuationService.CalculateGroupCourse(group),
+                DurationOfStudy = group.DurationOfStudy,
+                AdmissionYear = group.AdmissionYear,
                 Nonparsemester = group.Nonparsemester,
                 Parsemester = group.Parsemester,
+                HasEnterChoise = group.HasEnterChoise,
                 CuratorInfo = group.Curator is null ? null : WorkerMapper.MapToWorkerShortInfoDto(group.Curator)
             };
         }
@@ -41,9 +48,11 @@ namespace Server.Services.Mappings
                 GroupCode = group.GroupCode,
                 SpecialtyId = group.SpecialtyId,
                 EduLevel = group.EduLevel,
-                Course = group.Course,
+                DurationOfStudy = group.DurationOfStudy,
+                AdmissionYear = group.AdmissionYear,
                 Nonparsemester = group.Nonparsemester,
-                Parsemester = group.Parsemester
+                Parsemester = group.Parsemester,
+                HasEnterChoise = group.HasEnterChoise
             };
         }
     }

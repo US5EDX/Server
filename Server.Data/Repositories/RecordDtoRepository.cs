@@ -18,17 +18,32 @@ namespace Server.Data.Repositories
 
         public async Task<IEnumerable<RecordWithDisciplineInfoDto>> GetByStudentIdAndYear(byte[] studentId, short year)
         {
-            return await GetAsQueryable(r => r.Holding == year && r.StudentId.SequenceEqual(studentId))
+            return await GetQueryableRecordsWithDiscipline(r => r.Holding == year && r.StudentId.SequenceEqual(studentId))
                 .ToListAsync();
         }
 
         public async Task<RecordWithDisciplineInfoDto?> GetWithDisciplineById(uint recordId)
         {
-            return await GetAsQueryable(r => r.RecordId == recordId)
+            return await GetQueryableRecordsWithDiscipline(r => r.RecordId == recordId)
                 .FirstOrDefaultAsync();
         }
 
-        private IQueryable<RecordWithDisciplineInfoDto> GetAsQueryable(Expression<Func<Record, bool>> wherePredicate)
+        public async Task<IEnumerable<StudentYearsRecordsDto>> GetStudentRecordsByYears(byte[] studentId, HashSet<short> years)
+        {
+            return await _context.Records.Include(r => r.Discipline)
+                .Where(r => years.Contains(r.Holding) && r.StudentId.SequenceEqual(studentId))
+                .Select(r => new StudentYearsRecordsDto()
+                {
+                    Holding = r.Holding,
+                    Semester = r.Semester,
+                    Approved = r.Approved,
+                    DisciplineCode = r.Discipline.DisciplineCode,
+                    DisciplineName = r.Discipline.DisciplineName
+                }).ToListAsync();
+        }
+
+        private IQueryable<RecordWithDisciplineInfoDto> GetQueryableRecordsWithDiscipline(
+            Expression<Func<Record, bool>> wherePredicate)
         {
             return _context.Records
                 .Include(r => r.Discipline)

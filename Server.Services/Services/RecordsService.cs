@@ -11,13 +11,15 @@ namespace Server.Services.Services
         private IRecordRepository _recordRepository;
         private IRecordDtoRepository _recordDtoRepository;
         private IHoldingRepository _holdingRepository;
+        private IGroupRepository _groupRepository;
 
         public RecordsService(IRecordRepository recordRepository, IRecordDtoRepository recordDtoRepository,
-            IHoldingRepository holdingRepository)
+            IHoldingRepository holdingRepository, IGroupRepository groupRepository)
         {
             _recordRepository = recordRepository;
             _recordDtoRepository = recordDtoRepository;
             _holdingRepository = holdingRepository;
+            _groupRepository = groupRepository;
         }
 
         public async Task<IEnumerable<RecordWithStudentInfoDto>> GetSignedStudents(uint disciplineId, byte semester)
@@ -27,7 +29,7 @@ namespace Server.Services.Services
             return records.Select(RecordMapper.MapToRecordWithStudentInfo);
         }
 
-        public async Task<IEnumerable<StudentYearRecordsDto>> GetByStudentIdAndCourse(string studentId, byte course)
+        public async Task<IEnumerable<StudentYearRecordsDto>> GetByStudentIdAndGroupId(string studentId, uint groupId)
         {
             var isSuccess = Ulid.TryParse(studentId, out Ulid ulidStudentId);
 
@@ -36,19 +38,29 @@ namespace Server.Services.Services
 
             var byteStudentId = ulidStudentId.ToByteArray();
 
-            int limit = ChooseLimit(course);
+            var groupInfo = await _groupRepository.GetById(groupId);
 
-            if (limit < 1)
-                throw new InvalidCastException("Неіснуючий курс");
+            if (groupInfo == null)
+                throw new Exception("Групу не знайдено");
 
-            var years = await _holdingRepository.GetLastNYears(limit);
+            var lastVisibleYear = CalcuationService.CalculateLastHoldingForGroup(groupInfo);
 
-            var records = await _recordRepository.GetStudentRecordsByYears(byteStudentId, years);
+            var firstVisibleYear = groupInfo.HasEnterChoise ? groupInfo.AdmissionYear : groupInfo.AdmissionYear + 1;
+
+            if (lastVisibleYear < firstVisibleYear)
+                return Enumerable.Empty<StudentYearRecordsDto>();
+
+            var yearsRange = new HashSet<int>(
+                Enumerable.Range(firstVisibleYear, lastVisibleYear - firstVisibleYear + 1));
+
+            var years = (await _holdingRepository.GetYearsBySet(yearsRange)).ToHashSet();
+
+            var records = await _recordDtoRepository.GetStudentRecordsByYears(byteStudentId, years);
 
             var groupedRecords = records.GroupBy(r => r.Holding).ToDictionary(pair => pair.Key, pair => pair.ToList());
 
             foreach (var year in years)
-                groupedRecords.TryAdd(year, new List<Record>(0));
+                groupedRecords.TryAdd(year, new List<StudentYearsRecordsDto>(0));
 
             return groupedRecords.OrderByDescending(gr => gr.Key).Select(pair =>
             {
@@ -105,26 +117,6 @@ namespace Server.Services.Services
         public async Task<bool> UpdateStatus(uint recordId)
         {
             return await _recordRepository.UpdateStatus(recordId);
-        }
-
-        private int ChooseLimit(byte course)
-        {
-            if (course < 4)
-                return course;
-
-            if (course == 4)
-                return 3;
-
-            if (course < 7)
-                return course - 4;
-
-            if (course < 12)
-                return course - 6;
-
-            if (course == 12)
-                return 5;
-
-            return -1;
         }
     }
 }

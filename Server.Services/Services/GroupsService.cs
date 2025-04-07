@@ -57,11 +57,6 @@ namespace Server.Services.Services
             return await _groupRepository.Delete(groupId);
         }
 
-        public async Task UpdateGroupsCourse(uint facultyId)
-        {
-            await _groupRepository.UpdateGroupsCourse(facultyId);
-        }
-
         private byte[] GetWorkerIdAsByteArray(string workerId)
         {
             var isSuccess = Ulid.TryParse(workerId, out Ulid ulidWorkerId);

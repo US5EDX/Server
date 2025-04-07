@@ -142,7 +142,8 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.HasIndex(e => e.SpecialtyId, "specialtyId_idx");
 
             entity.Property(e => e.GroupId).HasColumnName("groupId");
-            entity.Property(e => e.Course).HasColumnName("course");
+            entity.Property(e => e.DurationOfStudy).HasColumnName("durationOfStudy");
+            entity.Property(e => e.AdmissionYear).HasColumnName("admissionYear");
             entity.Property(e => e.EduLevel)
                 .HasComment("1 - bachelor\n2 - master\n3 - phd")
                 .HasColumnName("eduLevel");
@@ -156,6 +157,9 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasComment("disciplines count on par semester")
                 .HasColumnName("parsemester");
             entity.Property(e => e.SpecialtyId).HasColumnName("specialtyId");
+            entity.Property(e => e.HasEnterChoise)
+                .HasComment("When group must choose disciplines right after admission set to true")
+                .HasColumnName("hasEnterChoise");
             entity.Property(e => e.CuratorId)
                 .HasMaxLength(16)
                 .IsFixedLength()

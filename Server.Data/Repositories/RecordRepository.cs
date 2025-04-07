@@ -27,12 +27,6 @@ namespace Server.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Record>> GetStudentRecordsByYears(byte[] studentId, IEnumerable<short> years)
-        {
-            return await _context.Records.Include(r => r.Discipline)
-                .Where(r => years.Contains(r.Holding) && r.StudentId.SequenceEqual(studentId)).ToListAsync();
-        }
-
         public async Task<uint> Add(Record record)
         {
             await _context.Records.AddAsync(record);

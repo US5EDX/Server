@@ -28,11 +28,11 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "2,3")]
-        [HttpGet("getByStudentIdAndCourse")]
+        [HttpGet("getByStudentIdAndGroupId")]
         public async Task<IActionResult> GetStudentYearsRecords([BindRequired][Length(26, 26)] string studentId,
-            [BindRequired][Range(1, 12)] byte course)
+            [BindRequired][Range(1, uint.MaxValue - 1)] uint groupId)
         {
-            return Ok(await _recordsService.GetByStudentIdAndCourse(studentId, course));
+            return Ok(await _recordsService.GetByStudentIdAndGroupId(studentId, groupId));
         }
 
         [Authorize(Roles = "2")]

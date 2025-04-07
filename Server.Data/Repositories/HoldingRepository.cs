@@ -37,6 +37,14 @@ namespace Server.Data.Repositories
             return record.EduYear;
         }
 
+        public async Task<IEnumerable<short>> GetYearsBySet(HashSet<int> requestedYears)
+        {
+            return await _context.Holdings
+                .Where(h => requestedYears.Contains(h.EduYear))
+                .Select(h => h.EduYear)
+                .ToListAsync();
+        }
+
         public async Task<Holding> Add(Holding holding)
         {
             await _context.Holdings.AddAsync(holding);

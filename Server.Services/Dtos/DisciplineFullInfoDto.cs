@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Server.Services.Dtos
 {
-    public class DisciplineFullInfoDto
+    public class DisciplineFullInfoDto : IValidatableObject
     {
         [Range(0, uint.MaxValue - 1)]
         public uint DisciplineId { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Server.Models.Interfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
+using System.Xml.XPath;
 
 namespace Server.Services.Services
 {
@@ -8,20 +9,28 @@ namespace Server.Services.Services
     {
         private readonly IStudentRepository _studentRepository;
         private readonly IHoldingRepository _holdingRepository;
+        private readonly IGroupRepository _groupRepository;
         private readonly IEmailService _emailService;
 
-        public StudentsService(IStudentRepository studentRepository, IHoldingRepository holdingRepository, IEmailService emailService)
+        public StudentsService(IStudentRepository studentRepository, IHoldingRepository holdingRepository,
+            IGroupRepository groupRepository, IEmailService emailService)
         {
             _studentRepository = studentRepository;
             _holdingRepository = holdingRepository;
+            _groupRepository = groupRepository;
             _emailService = emailService;
         }
 
         public async Task<IEnumerable<StudentWithRecordsDto>> GetWithLastReocorsByGroupId(uint groupId)
         {
-            var holding = await _holdingRepository.GetLastAsync();
+            var groupInfo = await _groupRepository.GetById(groupId);
 
-            var students = await _studentRepository.GetWithLastReocorsByGroupId(groupId, holding);
+            if (groupInfo == null)
+                throw new Exception("Групу не знайдено");
+
+            var holding = CalcuationService.CalculateLastHoldingForGroup(groupInfo);
+
+            var students = await _studentRepository.GetWithLastReocorsByGroupId(groupId, (short)holding);
 
             return students.Select(StudentMapper.MapToStudentWithRecordsDto);
         }

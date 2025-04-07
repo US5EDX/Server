@@ -45,10 +45,12 @@ namespace Server.Data.Repositories
 
             existingGroup.GroupCode = group.GroupCode;
             existingGroup.SpecialtyId = group.SpecialtyId;
-            existingGroup.Course = group.Course;
             existingGroup.EduLevel = group.EduLevel;
+            existingGroup.DurationOfStudy = group.DurationOfStudy;
+            existingGroup.AdmissionYear = group.AdmissionYear;
             existingGroup.Nonparsemester = group.Nonparsemester;
             existingGroup.Parsemester = group.Parsemester;
+            existingGroup.HasEnterChoise = group.HasEnterChoise;
             existingGroup.CuratorId = group.CuratorId;
 
             await _context.SaveChangesAsync();
@@ -58,8 +60,12 @@ namespace Server.Data.Repositories
 
         public async Task<bool?> Delete(uint groupId)
         {
+            var currDate = DateTime.UtcNow;
+
             bool hasDependencies = await _context.Groups
-                    .Where(g => g.GroupId == groupId && g.Course != 0).AnyAsync();
+                    .Where(g => g.GroupId == groupId && g.DurationOfStudy >=
+                    ((currDate.Month > 6 ? currDate.Year : (currDate.Year - 1)) - g.AdmissionYear + 1)) // after june as current edu year
+                    .AnyAsync(g => g.Students.Any());
 
             if (hasDependencies)
                 return null;
@@ -73,15 +79,6 @@ namespace Server.Data.Repositories
             await _context.SaveChangesAsync();
 
             return true;
-        }
-
-        public async Task UpdateGroupsCourse(uint facultyId)
-        {
-            await _context.Groups
-                        .Where(g => g.Specialty.FacultyId == facultyId)
-                        .ExecuteUpdateAsync(setters => setters
-                        .SetProperty(g => g.Course, g => g.Course == 0 ||
-                        (g.Course + 1 == 5 || g.Course + 1 == 7 || g.Course + 1 == 13) ? 0 : g.Course + 1));
         }
 
         private async Task<Group> GetByIdFullInfo(uint groupId)

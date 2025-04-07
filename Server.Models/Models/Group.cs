@@ -16,7 +16,9 @@ public partial class Group
     /// </summary>
     public byte EduLevel { get; set; }
 
-    public byte Course { get; set; }
+    public byte DurationOfStudy { get; set; }
+
+    public short AdmissionYear { get; set; }
 
     public uint SpecialtyId { get; set; }
 
@@ -29,6 +31,11 @@ public partial class Group
     /// disciplines count on par semester
     /// </summary>
     public byte Parsemester { get; set; }
+
+    /// <summary>
+    /// When group must choose disciplines right after admission set to true
+    /// </summary>
+    public bool HasEnterChoise { get; set; }
 
     public byte[]? CuratorId { get; set; }
 
