@@ -111,11 +111,6 @@ namespace Server.Data.Repositories
             if (hasDependencies)
                 return null;
 
-            if (existingUser.Worker is not null)
-            {
-                _context.Workers.Remove(existingUser.Worker);
-            }
-
             _context.Users.Remove(existingUser);
             await _context.SaveChangesAsync();
 

@@ -6,12 +6,12 @@ namespace Server.Services.Services
     {
         public static byte CalculateGroupCourse(Group group)
         {
-            int course = CalculatePassedYearsForGroup(group.AdmissionYear) + 1;
+            int groupCourse = CalculatePassedYearsForGroup(group.AdmissionYear) + 1;
 
-            if (course < 0 || course > group.DurationOfStudy)
-                course = 0;
+            if (groupCourse < 0 || groupCourse > group.DurationOfStudy)
+                groupCourse = 0;
 
-            return (byte)course;
+            return (byte)groupCourse;
         }
 
         public static int CalculateLastHoldingForGroup(Group group)
@@ -32,7 +32,7 @@ namespace Server.Services.Services
 
         private static int CalculatePassedYearsForGroup(short admissionYear)
         {
-            var currDate = DateTime.UtcNow;
+            var currDate = DateTime.Today;
             return (currDate.Month > 7 ? currDate.Year : (currDate.Year - 1)) - admissionYear;
         }
     }

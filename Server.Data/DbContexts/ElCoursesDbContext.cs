@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 using Server.Models.Models;
@@ -262,7 +264,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
 
             entity.Property(e => e.StudentId)
                 .HasMaxLength(16)
-                .HasDefaultValueSql("uuid_to_bin(uuid(),1)")
                 .IsFixedLength()
                 .HasColumnName("studentId");
             entity.Property(e => e.Faculty).HasColumnName("faculty");
@@ -271,6 +272,11 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasColumnName("fullName");
             entity.Property(e => e.Group).HasColumnName("group");
             entity.Property(e => e.Headman).HasColumnName("headman");
+
+            entity.HasOne(d => d.User).WithOne(p => p.Student)
+                .HasForeignKey<Student>(d => d.StudentId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_student_user");
 
             entity.HasOne(d => d.FacultyNavigation).WithMany(p => p.Students)
                 .HasForeignKey(d => d.Faculty)
@@ -295,7 +301,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
 
             entity.Property(e => e.UserId)
                 .HasMaxLength(16)
-                .HasDefaultValueSql("uuid_to_bin(uuid(),1)")
                 .IsFixedLength()
                 .HasColumnName("userId");
             entity.Property(e => e.Email).HasColumnName("email");
@@ -313,16 +318,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasColumnName("refreshToken");
             entity.Property(e => e.RefreshTokenExpiry)
                 .HasColumnName("refreshTokenExpiry");
-
-            entity.HasOne(e => e.Student)
-              .WithOne(s => s.User)
-              .HasForeignKey<Student>(s => s.StudentId)
-              .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Worker)
-                  .WithOne(t => t.User)
-                  .HasForeignKey<Worker>(t => t.WorkerId)
-                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Worker>(entity =>
@@ -335,7 +330,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
 
             entity.Property(e => e.WorkerId)
                 .HasMaxLength(16)
-                .HasDefaultValueSql("uuid_to_bin(uuid(),1)")
                 .IsFixedLength()
                 .HasColumnName("workerId");
             entity.Property(e => e.Department)
@@ -348,6 +342,11 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.Property(e => e.Position)
                 .HasMaxLength(100)
                 .HasColumnName("position");
+
+            entity.HasOne(d => d.User).WithOne(p => p.Worker)
+                .HasForeignKey<Worker>(d => d.WorkerId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_worker_user");
 
             entity.HasOne(d => d.FacultyNavigation).WithMany(p => p.Workers)
                 .HasForeignKey(d => d.Faculty)

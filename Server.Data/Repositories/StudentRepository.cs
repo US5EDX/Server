@@ -106,11 +106,6 @@ namespace Server.Data.Repositories
             if (hasDependencies)
                 return null;
 
-            if (existingUser.Student is not null)
-            {
-                _context.Students.Remove(existingUser.Student);
-            }
-
             _context.Users.Remove(existingUser);
             await _context.SaveChangesAsync();
 

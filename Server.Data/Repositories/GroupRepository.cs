@@ -60,7 +60,7 @@ namespace Server.Data.Repositories
 
         public async Task<bool?> Delete(uint groupId)
         {
-            var currDate = DateTime.UtcNow;
+            var currDate = DateTime.Today;
 
             bool hasDependencies = await _context.Groups
                     .Where(g => g.GroupId == groupId && g.DurationOfStudy >=
@@ -75,10 +75,25 @@ namespace Server.Data.Repositories
             if (existingGroup is null)
                 return false;
 
+            await DeleteStudentsUserInfoWithoutSave(existingGroup.GroupId);
+
             _context.Groups.Remove(existingGroup);
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        /// <summary>
+        /// to delete group with students full info
+        /// </summary>
+        private async Task DeleteStudentsUserInfoWithoutSave(uint groupId)
+        {
+            var students = await _context.Students
+                .Where(s => s.Group == groupId)
+                .Include(s => s.User)
+                .ToListAsync();
+
+            _context.Users.RemoveRange(students.Select(s => s.User));
         }
 
         private async Task<Group> GetByIdFullInfo(uint groupId)
