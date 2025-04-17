@@ -1,4 +1,5 @@
-﻿using Server.Models.Interfaces;
+﻿using Microsoft.Extensions.Options;
+using Server.Models.Interfaces;
 using Server.Models.Models;
 using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
@@ -17,10 +18,16 @@ namespace Server.Services.Services
         private readonly IDisciplineRepository _disciplineRepository;
         private readonly IDisciplineDtoRepository _disciplineDtoRepository;
 
-        public DisciplinesService(IDisciplineRepository disciplineRepository, IDisciplineDtoRepository disciplineDtoRepository)
+        private readonly DisciplineStatusThresholds _disciplineStatusThresholds;
+        private readonly DisciplineStatusColors _disciplineStatusColors;
+
+        public DisciplinesService(IDisciplineRepository disciplineRepository, IDisciplineDtoRepository disciplineDtoRepository,
+            IOptions<DisciplineStatusThresholds> disciplineStatusThresholds, IOptions<DisciplineStatusColors> disciplineStatusColors)
         {
             _disciplineRepository = disciplineRepository;
             _disciplineDtoRepository = disciplineDtoRepository;
+            _disciplineStatusThresholds = disciplineStatusThresholds.Value;
+            _disciplineStatusColors = disciplineStatusColors.Value;
         }
 
         public async Task<int> GetCount(uint facultyId, short holdingFilter, byte? catalogFilter)
@@ -54,6 +61,21 @@ namespace Server.Services.Services
             var disciplines = await _disciplineRepository.GetShortInfoByCodeEduYearEduLevelSemester(code, year, eduLevel, semester);
 
             return disciplines.Select(DisciplineMapper.MapToShortDisciplineInfo);
+        }
+
+        public DisciplineStatusThresholds GetThresholds()
+        {
+            return _disciplineStatusThresholds;
+        }
+
+        public async Task<object> GetDisciplinesPrintInfo(uint facultyId, byte catalogType, short eduYear, byte semester)
+        {
+            var disciplines = await _disciplineDtoRepository.GetDisciplinesOnSemester(facultyId, catalogType, eduYear, semester);
+
+            foreach (var discipline in disciplines)
+                discipline.ColorStatus = _disciplineStatusColors.GetColor(discipline.StudentsCount, _disciplineStatusThresholds);
+
+            return new { Thresholds = _disciplineStatusThresholds, Disciplines = disciplines };
         }
 
         public async Task<DisciplineFullInfoDto> AddDiscipline(DisciplineFullInfoDto discipline, string userId)

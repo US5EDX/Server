@@ -32,6 +32,26 @@ namespace Server.Data.Repositories
                                  page, size);
         }
 
+        public async Task<IEnumerable<DisciplinePrintInfo>> GetDisciplinesOnSemester(uint facultyId, byte catalogType, short eduYear, byte semester)
+        {
+            return await _context.Disciplines
+                .Where(d => d.FacultyId == facultyId && d.CatalogType == catalogType && d.Holding == eduYear
+                && (d.Semester == 0 || d.Semester == semester))
+                .Select(d => new DisciplinePrintInfo()
+                {
+                    DisciplineCode = d.DisciplineCode,
+                    DisciplineName = d.DisciplineName,
+                    StudentsCount = d.Records.Count(r => r.Holding == d.Holding && r.Semester == semester),
+                    SpecialtyName = d.Specialty.SpecialtyName,
+                    EduLevel = d.EduLevel,
+                    Course = d.Course,
+                    Semester = d.Semester,
+                    MinCount = d.MinCount,
+                    MaxCount = d.MaxCount,
+                    IsOpen = d.IsOpen,
+                }).ToListAsync();
+        }
+
         private async Task<IEnumerable<DisciplineWithSubCountDto>> GetWithSubscribersAsync
             (IQueryable<Discipline> disciplinesQueryable, int page, int size)
         {

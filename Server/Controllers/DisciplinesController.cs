@@ -63,6 +63,23 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "2,3")]
+        [HttpGet("getTresholds")]
+        public async Task<IActionResult> GetTresholds()
+        {
+            return Ok(_disciplinesService.GetThresholds());
+        }
+
+        [Authorize(Roles = "2")]
+        [HttpGet("getDisciplinesPrintInfo")]
+        public async Task<IActionResult> GetDisciplinesPrintInfo([BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId,
+            [BindRequired][Range(1,2)] byte catalogType,
+            [BindRequired][Range(2020, 2155)] short eduYear,
+            [BindRequired][Range(1, 2)] byte semester)
+        {
+            return Ok(await _disciplinesService.GetDisciplinesPrintInfo(facultyId, catalogType, eduYear, semester));
+        }
+
+        [Authorize(Roles = "2,3")]
         [HttpPost("addDiscipline")]
         public async Task<IActionResult> AddDiscipline([FromBody] DisciplineFullInfoDto discipline)
         {

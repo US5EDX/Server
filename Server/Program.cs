@@ -54,8 +54,11 @@ builder.Services.AddScoped<RecordsService>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<StudentsService>();
 
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<MailOptions>(builder.Configuration.GetSection("MailSettings"));
+builder.Services.Configure<DisciplineStatusThresholds>(builder.Configuration.GetSection("DisciplineStatusThresholds"));
+builder.Services.Configure<DisciplineStatusColors>(builder.Configuration.GetSection("DisciplineStatusColors"));
+
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddSingleton<JwtService>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtOptions>();
