@@ -1,4 +1,5 @@
 ﻿using Server.Models.Interfaces;
+using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
 using System.Xml.XPath;
@@ -8,15 +9,15 @@ namespace Server.Services.Services
     public class StudentsService
     {
         private readonly IStudentRepository _studentRepository;
-        private readonly IHoldingRepository _holdingRepository;
+        private readonly IStudentDtoRepository _studentDtoRepository;
         private readonly IGroupRepository _groupRepository;
         private readonly IEmailService _emailService;
 
-        public StudentsService(IStudentRepository studentRepository, IHoldingRepository holdingRepository,
+        public StudentsService(IStudentRepository studentRepository, IStudentDtoRepository studentDtoRepository,
             IGroupRepository groupRepository, IEmailService emailService)
         {
             _studentRepository = studentRepository;
-            _holdingRepository = holdingRepository;
+            _studentDtoRepository = studentDtoRepository;
             _groupRepository = groupRepository;
             _emailService = emailService;
         }
@@ -33,6 +34,12 @@ namespace Server.Services.Services
             var students = await _studentRepository.GetWithLastReocorsByGroupId(groupId, (short)holding);
 
             return students.Select(StudentMapper.MapToStudentWithRecordsDto);
+        }
+
+        public async Task<object> GetWithAllRecordsByGroupId(uint groupId)
+        {
+            var students = await _studentDtoRepository.GetWithAllRecordsByGroupId(groupId);
+            return students;
         }
 
         public async Task<StudentRegistryDto> AddStudent(StudentRegistryDto studentRegistry)

@@ -21,9 +21,16 @@ namespace Server.Controllers
 
         [Authorize]
         [HttpGet("getWithRecrodsByGroupId/{groupId}")]
-        public async Task<IActionResult> GetCount([BindRequired][Range(1, uint.MaxValue - 1)] uint groupId)
+        public async Task<IActionResult> GetWithLastReocorsByGroupId([BindRequired][Range(1, uint.MaxValue - 1)] uint groupId)
         {
             return Ok(await _studentsService.GetWithLastReocorsByGroupId(groupId));
+        }
+
+        [Authorize(Roles = "2,3")]
+        [HttpGet("getWithAllRecrodsByGroupId/{groupId}")]
+        public async Task<IActionResult> GetWithAllRecordsByGroupId([BindRequired][Range(1, uint.MaxValue - 1)] uint groupId)
+        {
+            return Ok(await _studentsService.GetWithAllRecordsByGroupId(groupId));
         }
 
         [Authorize]

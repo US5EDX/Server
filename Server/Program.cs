@@ -52,6 +52,7 @@ builder.Services.AddScoped<IRecordDtoRepository, RecordDtoRepository>();
 builder.Services.AddScoped<RecordsService>();
 
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IStudentDtoRepository, StudentDtoRepository>();
 builder.Services.AddScoped<StudentsService>();
 
 builder.Services.Configure<MailOptions>(builder.Configuration.GetSection("MailSettings"));
