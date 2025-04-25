@@ -37,6 +37,12 @@ namespace Server.Data.Repositories
             return record.EduYear;
         }
 
+        public async Task<Holding> GetLastWithDates()
+        {
+            return await _context.Holdings.OrderByDescending(h => h.EduYear)
+                 .FirstAsync();
+        }
+
         public async Task<IEnumerable<short>> GetYearsBySet(HashSet<int> requestedYears)
         {
             return await _context.Holdings

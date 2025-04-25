@@ -205,6 +205,8 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
 
             entity.HasIndex(e => new { e.DisciplineId, e.Holding, e.Semester }, "idx_records_discipline_holding_semester");
 
+            entity.HasIndex(e => new { e.StudentId, e.Holding, e.Semester }, "idx_records_student_holding_semester");
+
             entity.Property(e => e.RecordId).HasColumnName("recordId");
             entity.Property(e => e.Approved).HasColumnName("approved");
             entity.Property(e => e.DisciplineId).HasColumnName("disciplineId");

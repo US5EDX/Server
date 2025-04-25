@@ -28,6 +28,20 @@ namespace Server.Data.Repositories
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<IEnumerable<RecordShortDisciplineInfoDto>> GetWithDisciplineShort(byte[] studentId, short year)
+        {
+            return await _context.Records.Where(r => r.StudentId.SequenceEqual(studentId) && r.Holding == year)
+                .Select(r => new RecordShortDisciplineInfoDto()
+                {
+                    RecordId = r.RecordId,
+                    ChosenSemester = r.Semester,
+                    Approved = r.Approved,
+                    DisciplineId = r.Discipline.DisciplineId,
+                    DisciplineCode = r.Discipline.DisciplineCode,
+                    DisciplineName = r.Discipline.DisciplineName,
+                }).ToListAsync();
+        }
+
         public async Task<IEnumerable<StudentYearsRecordsDto>> GetStudentRecordsByYears(byte[] studentId, HashSet<short> years)
         {
             return await _context.Records.Include(r => r.Discipline)

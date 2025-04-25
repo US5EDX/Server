@@ -58,9 +58,13 @@ namespace Server.Services.Services
         public async Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearchYearEduLevelSemester(
             string code, short year, byte eduLevel, byte semester)
         {
-            var disciplines = await _disciplineRepository.GetShortInfoByCodeEduYearEduLevelSemester(code, year, eduLevel, semester);
+            return await _disciplineDtoRepository.GetByCodeSearchWithClosed(code, year, eduLevel, semester);
+        }
 
-            return disciplines.Select(DisciplineMapper.MapToShortDisciplineInfo);
+        public async Task<IEnumerable<DisciplineShortInfoDto>> GetOptionsByCodeSearch(
+            string code, short year, byte eduLevel, byte semester)
+        {
+            return await _disciplineDtoRepository.GetByCodeSearchWithoutClosed(code, year, eduLevel, semester);
         }
 
         public DisciplineStatusThresholds GetThresholds()

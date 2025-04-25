@@ -9,6 +9,7 @@ namespace Server.Models.Interfaces
         Task<IEnumerable<Holding>> GetAll();
         Task<IEnumerable<short>> GetLastNYears(int limit);
         Task<short> GetLastAsync();
+        Task<Holding> GetLastWithDates();
         Task<IEnumerable<short>> GetYearsBySet(HashSet<int> requestedYears);
         Task<Holding?> Update(Holding holding);
     }

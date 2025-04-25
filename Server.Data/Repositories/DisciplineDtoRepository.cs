@@ -4,6 +4,7 @@ using Server.Models.Models;
 using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
+using System.Linq.Expressions;
 
 namespace Server.Data.Repositories
 {
@@ -14,6 +15,20 @@ namespace Server.Data.Repositories
         public DisciplineDtoRepository(ElCoursesDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearchWithClosed
+            (string code, short eduYear, byte eduLevel, byte semester)
+        {
+            return await GetByCodeSearch(d => d.Holding == eduYear && d.EduLevel == eduLevel &&
+                (d.Semester == 0 || d.Semester == semester) && d.DisciplineCode.StartsWith(code));
+        }
+
+        public async Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearchWithoutClosed
+            (string code, short eduYear, byte eduLevel, byte semester)
+        {
+            return await GetByCodeSearch(d => d.Holding == eduYear && d.EduLevel == eduLevel &&
+                (d.Semester == 0 || d.Semester == semester) && d.IsOpen == true && d.DisciplineCode.StartsWith(code));
         }
 
         public async Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines
@@ -50,6 +65,18 @@ namespace Server.Data.Repositories
                     MaxCount = d.MaxCount,
                     IsOpen = d.IsOpen,
                 }).ToListAsync();
+        }
+
+        private async Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearch(Expression<Func<Discipline, bool>> wherePredicate)
+        {
+            return await _context.Disciplines
+                .Where(wherePredicate)
+                .Select(r => new DisciplineShortInfoDto()
+                {
+                    DisciplineId = r.DisciplineId,
+                    DisciplineCodeName = $"{r.DisciplineCode} {r.DisciplineName}"
+                })
+                .ToListAsync();
         }
 
         private async Task<IEnumerable<DisciplineWithSubCountDto>> GetWithSubscribersAsync

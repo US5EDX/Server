@@ -52,7 +52,7 @@ namespace Server.Controllers
             return Ok(discipline);
         }
 
-        [Authorize]
+        [Authorize(Roles = "2")]
         [HttpGet("getShortInfo")]
         public async Task<IActionResult> GetShortInfo([BindRequired][Range(2020, 2155)] short holding,
             [BindRequired][Range(1, 3)] byte eduLevel,
@@ -60,6 +60,16 @@ namespace Server.Controllers
             [BindRequired][Length(1, 50)] string code)
         {
             return Ok(await _disciplinesService.GetByCodeSearchYearEduLevelSemester(code, holding, eduLevel, semester));
+        }
+
+        [Authorize(Roles = "4")]
+        [HttpGet("getOptionsInfo")]
+        public async Task<IActionResult> GetOptionsInfo([BindRequired][Range(2020, 2155)] short holding,
+            [BindRequired][Range(1, 3)] byte eduLevel,
+            [BindRequired][Range(1, 2)] byte semester,
+            [BindRequired][Length(1, 50)] string code)
+        {
+            return Ok(await _disciplinesService.GetOptionsByCodeSearch(code, holding, eduLevel, semester));
         }
 
         [Authorize(Roles = "2,3")]
@@ -72,7 +82,7 @@ namespace Server.Controllers
         [Authorize(Roles = "2")]
         [HttpGet("getDisciplinesPrintInfo")]
         public async Task<IActionResult> GetDisciplinesPrintInfo([BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId,
-            [BindRequired][Range(1,2)] byte catalogType,
+            [BindRequired][Range(1, 2)] byte catalogType,
             [BindRequired][Range(2020, 2155)] short eduYear,
             [BindRequired][Range(1, 2)] byte semester)
         {

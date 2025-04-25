@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Server.Services.Dtos;
 using Server.Services.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace Server.Controllers
 {
@@ -43,18 +43,47 @@ namespace Server.Controllers
             return Ok(await _recordsService.GetRecordsByStudentIdAndYear(studentId, year));
         }
 
+        [Authorize(Roles = "4")]
+        [HttpGet("getWithDisciplineShortInfo")]
+        public async Task<IActionResult> GetWithDisciplineShortInfo(
+            [BindRequired][Range(2020, 2155)] short year)
+        {
+            var studentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (studentId is null)
+                return BadRequest("Невалідний Id");
+
+            return Ok(await _recordsService.GetWithDisciplineShort(studentId, year));
+        }
+
         [Authorize(Roles = "2")]
         [HttpPost("addRecord")]
         public async Task<IActionResult> AddRecord([FromBody] RecordRegistryDto record)
         {
+            if (record.RecordId is not null)
+                return BadRequest("Невалідні дані");
+
             return StatusCode(StatusCodes.Status201Created, await _recordsService.AddRecord(record));
+        }
+
+        [Authorize(Roles = "4")]
+        [HttpPost("registerRecord")]
+        public async Task<IActionResult> RegisterRecord([FromBody] RecordRegistryWithoutStudent record)
+        {
+            var studentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (studentId is null)
+                return BadRequest("Невалідний Id");
+
+            var result = await _recordsService.RegisterRecord(record, studentId);
+
+            return Ok(result);
         }
 
         [Authorize(Roles = "2")]
         [HttpPut("updateRecord")]
         public async Task<IActionResult> UpdateRecord([FromBody] RecordRegistryDto record)
         {
-            if (record.RecordId == 0)
+            if (record.RecordId is null)
                 return BadRequest("Невалідні дані");
 
             var updatedDiscipline = await _recordsService.UpdateRecord(record);

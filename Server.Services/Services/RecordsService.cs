@@ -8,10 +8,12 @@ namespace Server.Services.Services
 {
     public class RecordsService
     {
-        private IRecordRepository _recordRepository;
-        private IRecordDtoRepository _recordDtoRepository;
-        private IHoldingRepository _holdingRepository;
-        private IGroupRepository _groupRepository;
+        private readonly IRecordRepository _recordRepository;
+        private readonly IRecordDtoRepository _recordDtoRepository;
+        private readonly IHoldingRepository _holdingRepository;
+        private readonly IGroupRepository _groupRepository;
+
+        private readonly TimeZoneInfo _kiyvTimeZone;
 
         public RecordsService(IRecordRepository recordRepository, IRecordDtoRepository recordDtoRepository,
             IHoldingRepository holdingRepository, IGroupRepository groupRepository)
@@ -20,6 +22,8 @@ namespace Server.Services.Services
             _recordDtoRepository = recordDtoRepository;
             _holdingRepository = holdingRepository;
             _groupRepository = groupRepository;
+
+            _kiyvTimeZone = TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time");
         }
 
         public async Task<IEnumerable<RecordWithStudentInfoDto>> GetSignedStudents(uint disciplineId, byte semester)
@@ -90,10 +94,17 @@ namespace Server.Services.Services
             return await _recordDtoRepository.GetByStudentIdAndYear(byteStudentId, year);
         }
 
+        public async Task<IEnumerable<RecordShortDisciplineInfoDto>> GetWithDisciplineShort(string studentId, short year)
+        {
+            var isSuccess = Ulid.TryParse(studentId, out Ulid ulidStudentId);
+            if (!isSuccess)
+                throw new InvalidCastException("Невалідний Id");
+            var byteStudentId = ulidStudentId.ToByteArray();
+            return await _recordDtoRepository.GetWithDisciplineShort(byteStudentId, year);
+        }
+
         public async Task<RecordWithDisciplineInfoDto> AddRecord(RecordRegistryDto record)
         {
-            record.RecordId = 0;
-
             var newRecordId = await _recordRepository.Add(RecordMapper.MapToRecord(record));
 
             return await _recordDtoRepository.GetWithDisciplineById(newRecordId);
@@ -117,6 +128,39 @@ namespace Server.Services.Services
         public async Task<bool> UpdateStatus(uint recordId)
         {
             return await _recordRepository.UpdateStatus(recordId);
+        }
+
+        public async Task<uint> RegisterRecord(RecordRegistryWithoutStudent inRecord, string studentId)
+        {
+            var kiyvDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTime.UtcNow, _kiyvTimeZone));
+
+            var holding = await _holdingRepository.GetLastWithDates();
+
+            if (holding is null || holding.StartDate > kiyvDate || holding.EndDate < kiyvDate ||
+                inRecord.Holding != holding.EduYear)
+                throw new InvalidOperationException("Вибір недоступний");
+
+            if (!Ulid.TryParse(studentId, out Ulid ulidStudentId))
+                throw new InvalidCastException("Невалідний Id");
+
+            var byteStudentId = ulidStudentId.ToByteArray();
+
+            int choicesCount = -1;
+
+            if (inRecord.RecordId is null)
+                choicesCount = await _groupRepository.GetCoicesCountOnSemester(byteStudentId, inRecord.Semester);
+
+            if (choicesCount == 0)
+                throw new Exception("Проблеми з id");
+
+            var record = RecordMapper.MapToRecord(inRecord);
+
+            record.StudentId = byteStudentId;
+
+            var res = record.RecordId == 0 ? await _recordRepository.AddRecord(record, choicesCount) :
+                await _recordRepository.UpdateRecord(record);
+
+            return res;
         }
     }
 }

@@ -24,6 +24,12 @@ namespace Server.Services.Services
             return await _holdingRepository.GetLastNYears(5);
         }
 
+        public async Task<HoldingDto> GetLast()
+        {
+            var lastHolding = await _holdingRepository.GetLastWithDates();
+            return HoldingMapper.MapToHoldingDto(lastHolding);
+        }
+
         public async Task<HoldingDto> AddHolding(HoldingDto holding)
         {
             var newHolding = await _holdingRepository.Add(HoldingMapper.MapToHolding(holding));

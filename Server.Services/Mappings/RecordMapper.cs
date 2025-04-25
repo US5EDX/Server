@@ -46,12 +46,23 @@ namespace Server.Services.Mappings
         {
             return new Record()
             {
-                RecordId = record.RecordId,
+                RecordId = record.RecordId ?? 0,
                 StudentId = Ulid.Parse(record.StudentId).ToByteArray(),
                 DisciplineId = record.DisciplineId,
                 Semester = record.Semester,
                 Holding = record.Holding,
                 Approved = false,
+            };
+        }
+
+        public static Record MapToRecord(RecordRegistryWithoutStudent record)
+        {
+            return new Record()
+            {
+                RecordId = record.RecordId ?? 0,
+                DisciplineId = record.DisciplineId,
+                Semester = record.Semester,
+                Holding = record.Holding,
             };
         }
     }

@@ -36,14 +36,6 @@ namespace Server.Data.Repositories
                 .FirstOrDefaultAsync(g => g.DisciplineId == disciplineId);
         }
 
-        public async Task<List<Discipline>> GetShortInfoByCodeEduYearEduLevelSemester(string code, short eduYear, byte eduLevel, byte semester)
-        {
-            return await _context.Disciplines
-                .Where(d => d.Holding == eduYear && d.EduLevel == eduLevel &&
-                (d.Semester == 0 || d.Semester == semester) && d.DisciplineCode.StartsWith(code))
-                .ToListAsync();
-        }
-
         public async Task<Discipline> Add(Discipline discipline)
         {
             await _context.Disciplines.AddAsync(discipline);

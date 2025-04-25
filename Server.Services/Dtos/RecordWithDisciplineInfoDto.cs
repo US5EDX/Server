@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-
-namespace Server.Services.Dtos
+﻿namespace Server.Services.Dtos
 {
-    public class RecordWithDisciplineInfoDto
+    public class RecordShortDisciplineInfoDto
     {
         public uint RecordId { get; set; }
 
@@ -20,7 +13,10 @@ namespace Server.Services.Dtos
         public string DisciplineCode { get; set; }
 
         public string DisciplineName { get; set; }
+    }
 
+    public class RecordWithDisciplineInfoDto : RecordShortDisciplineInfoDto
+    {
         public string Course { get; set; }
 
         public byte EduLevel { get; set; }
