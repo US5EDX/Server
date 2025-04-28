@@ -43,6 +43,8 @@ namespace Server.Services.Dtos
 
         public short Holding { get; set; }
 
+        public bool IsYearLong { get; set; }
+
         public bool IsOpen { get; set; }
     }
 }

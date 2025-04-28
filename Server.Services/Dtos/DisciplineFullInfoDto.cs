@@ -67,6 +67,9 @@ namespace Server.Services.Dtos
         public short Holding { get; set; }
 
         [Required]
+        public bool IsYearLong { get; set; }
+
+        [Required]
         public bool IsOpen { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -84,6 +87,13 @@ namespace Server.Services.Dtos
                 yield return new ValidationResult(
                     "Значення не є посиланням",
                     [nameof(Url)]);
+            }
+
+            if (Semester != 0 && IsYearLong)
+            {
+                yield return new ValidationResult(
+                    "Дисципліна має бути розрахована на 2 семестри, щоб вивчатись протягом року",
+                    [nameof(IsYearLong)]);
             }
         }
     }

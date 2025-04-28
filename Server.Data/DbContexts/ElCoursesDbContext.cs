@@ -86,6 +86,9 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.Property(e => e.IsOpen)
                 .HasDefaultValueSql("'1'")
                 .HasColumnName("isOpen");
+            entity.Property(e => e.IsYearLong)
+                .HasDefaultValueSql("'0'")
+                .HasColumnName("isYearLong");
             entity.Property(e => e.MaxCount)
                 .HasComment("max count of students assinged to discipline")
                 .HasColumnName("maxCount");

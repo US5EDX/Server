@@ -5,5 +5,7 @@
         public uint DisciplineId { get; set; }
 
         public string DisciplineCodeName { get; set; }
+
+        public bool IsYearLong { get; set; }
     }
 }

@@ -63,6 +63,7 @@ namespace Server.Data.Repositories
             existingDiscipline.MaxCount = discipline.MaxCount;
             existingDiscipline.MinCount = discipline.MinCount;
             existingDiscipline.Url = discipline.Url;
+            existingDiscipline.IsYearLong = discipline.IsYearLong;
 
             await _context.SaveChangesAsync();
 

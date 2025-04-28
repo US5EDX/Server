@@ -39,6 +39,7 @@ namespace Server.Data.Repositories
                     DisciplineId = r.Discipline.DisciplineId,
                     DisciplineCode = r.Discipline.DisciplineCode,
                     DisciplineName = r.Discipline.DisciplineName,
+                    IsYearLong = r.Discipline.IsYearLong,
                 }).ToListAsync();
         }
 
@@ -75,6 +76,7 @@ namespace Server.Data.Repositories
                     Semester = r.Discipline.Semester,
                     SubscribersCount = _context.Records
                     .Count(rs => rs.DisciplineId == r.DisciplineId && rs.Holding == r.Holding && rs.Semester == r.Semester),
+                    IsYearLong = r.Discipline.IsYearLong,
                     IsOpen = r.Discipline.IsOpen,
                 });
         }

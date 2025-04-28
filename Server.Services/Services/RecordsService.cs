@@ -145,20 +145,24 @@ namespace Server.Services.Services
 
             var byteStudentId = ulidStudentId.ToByteArray();
 
-            int choicesCount = -1;
+            var groupInfo = await _groupRepository.GetGroupInfoByStudentId(byteStudentId);
 
-            if (inRecord.RecordId is null)
-                choicesCount = await _groupRepository.GetCoicesCountOnSemester(byteStudentId, inRecord.Semester);
-
-            if (choicesCount == 0)
+            if (groupInfo is null)
                 throw new Exception("Проблеми з id");
+
+            var course = CalcuationService.CalculateGroupCourse(groupInfo); //can also be used later for discipline course check
+
+            if (course == 0 || course == groupInfo.DurationOfStudy ||
+                (holding.EduYear == groupInfo.AdmissionYear && !groupInfo.HasEnterChoise))
+                throw new Exception("Вибір для вас не запланований");
 
             var record = RecordMapper.MapToRecord(inRecord);
 
             record.StudentId = byteStudentId;
 
-            var res = record.RecordId == 0 ? await _recordRepository.AddRecord(record, choicesCount) :
-                await _recordRepository.UpdateRecord(record);
+            var res = record.RecordId == 0 ? await _recordRepository.AddRecord(record, groupInfo.EduLevel,
+                inRecord.Semester == 1 ? groupInfo.Nonparsemester : groupInfo.Parsemester) :
+                await _recordRepository.UpdateRecord(record, groupInfo.EduLevel);
 
             return res;
         }

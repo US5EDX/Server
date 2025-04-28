@@ -74,7 +74,8 @@ namespace Server.Data.Repositories
                 .Select(r => new DisciplineShortInfoDto()
                 {
                     DisciplineId = r.DisciplineId,
-                    DisciplineCodeName = $"{r.DisciplineCode} {r.DisciplineName}"
+                    DisciplineCodeName = $"{r.DisciplineCode} {r.DisciplineName}",
+                    IsYearLong = r.IsYearLong,
                 })
                 .ToListAsync();
         }
@@ -105,7 +106,8 @@ namespace Server.Data.Repositories
                                      NonparsemesterCount = d.Records.Count(r => r.Holding == d.Holding && r.Semester == 1),
                                      ParsemesterCount = d.Records.Count(r => r.Holding == d.Holding && r.Semester == 2),
                                      Holding = d.Holding,
-                                     IsOpen = d.IsOpen
+                                     IsYearLong = d.IsYearLong,
+                                     IsOpen = d.IsOpen,
                                  })
                                  .ToListAsync();
         }

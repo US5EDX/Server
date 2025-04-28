@@ -9,7 +9,7 @@ namespace Server.Models.Interfaces
         Task<IEnumerable<Record>> GetRecordsWithStudentInfo(uint disciplineId, byte semester);
         Task<uint?> Update(Record record);
         Task<bool> UpdateStatus(uint recordId);
-        Task<uint> AddRecord(Record record, int choicesCount);
-        Task<uint> UpdateRecord(Record record);
+        Task<uint> AddRecord(Record record, byte eduLevel, int choicesCount);
+        Task<uint> UpdateRecord(Record record, byte eduLevel);
     }
 }

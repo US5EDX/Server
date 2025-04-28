@@ -58,6 +58,8 @@ public partial class Discipline
 
     public short Holding { get; set; }
 
+    public bool IsYearLong { get; set; }
+
     public bool IsOpen { get; set; }
 
     public byte[] CreatorId { get; set; } = null!;

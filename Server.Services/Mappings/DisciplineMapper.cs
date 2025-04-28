@@ -24,6 +24,7 @@ namespace Server.Services.Mappings
                 MinCount = discipline.MinCount,
                 Url = discipline.Url,
                 Holding = discipline.Holding,
+                IsYearLong = discipline.IsYearLong,
                 IsOpen = discipline.IsOpen,
             };
         }
@@ -47,7 +48,8 @@ namespace Server.Services.Mappings
                 MinCount = discipline.MinCount,
                 Url = discipline.Url,
                 Holding = discipline.Holding,
-                IsOpen = discipline.IsOpen
+                IsYearLong = discipline.IsYearLong,
+                IsOpen = discipline.IsOpen,
             };
         }
 

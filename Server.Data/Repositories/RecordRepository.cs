@@ -83,17 +83,17 @@ namespace Server.Data.Repositories
             return true;
         }
 
-        public async Task<uint> AddRecord(Record record, int choicesCount)
+        public async Task<uint> AddRecord(Record record, byte eduLevel, int choicesCount)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead);
 
             var checkResult = await CheckRepeat(
                 record.StudentId, record.DisciplineId, record.Holding, record.Semester);
 
-            if (!checkResult)
+            if (checkResult)
                 throw new InvalidOperationException("Дублювання вибору.");
 
-            var discipline = await GetNewDiscipline(record.DisciplineId, record.Holding, record.Semester);
+            var discipline = await GetNewDiscipline(record.DisciplineId, record.Holding, eduLevel, record.Semester);
 
             var existingCount = await _context.Records
                 .FromSql($@"SELECT * FROM Record WHERE studentId = {record.StudentId} 
@@ -115,7 +115,7 @@ AND holding = {record.Holding} AND semester = {record.Semester} FOR UPDATE")
             return record.RecordId;
         }
 
-        public async Task<uint> UpdateRecord(Record record)
+        public async Task<uint> UpdateRecord(Record record, byte eduLevel)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead);
 
@@ -129,10 +129,10 @@ AND holding = {record.Holding} AND semester = {record.Semester} AND approved = F
             var checkResult = await CheckRepeat(
                 existingRecord.StudentId, record.DisciplineId, existingRecord.Holding, existingRecord.Semester);
 
-            if (!checkResult)
+            if (checkResult)
                 throw new InvalidOperationException("Дублювання вибору.");
 
-            var discipline = await GetNewDiscipline(record.DisciplineId, existingRecord.Holding, existingRecord.Semester);
+            var discipline = await GetNewDiscipline(record.DisciplineId, existingRecord.Holding, eduLevel, existingRecord.Semester);
 
             if (await IsNeedLock(discipline.DisciplineId, existingRecord.Holding, existingRecord.Semester, discipline.MaxCount))
                 discipline.IsOpen = false;
@@ -155,20 +155,21 @@ AND holding = {record.Holding} AND semester = {record.Semester} AND approved = F
                 .Select(selector => new
                 {
                     selector.Semester,
+                    IsYearDisciplineDuration = selector.Discipline.IsYearLong
                 })
                 .ToListAsync();
 
             if (duplicates.Count == 0)
-                return true;
+                return false;
 
-            return duplicates.Any(r => r.Semester == semester); //one more condition later for allowed two semesters choice
+            return duplicates.Any(r => r.Semester == semester || !r.IsYearDisciplineDuration);
         }
 
-        private async Task<Discipline> GetNewDiscipline(uint disciplineId, short holding, byte semester)
+        private async Task<Discipline> GetNewDiscipline(uint disciplineId, short holding, byte eduLevel, byte semester)
         {
             var discipline = await _context.Disciplines
                 .FromSql($@"SELECT * FROM Discipline WHERE disciplineId = {disciplineId} AND holding = {holding} 
-AND (semester = 0 OR semester = {semester}) AND isOpen = TRUE FOR UPDATE")
+AND eduLevel = {eduLevel} AND (semester = 0 OR semester = {semester}) AND isOpen = TRUE FOR UPDATE")
                 .FirstOrDefaultAsync();
 
             if (discipline is null)

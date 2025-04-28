@@ -2,7 +2,6 @@
 using Server.Data.DbContexts;
 using Server.Models.Interfaces;
 using Server.Models.Models;
-using System.Linq.Expressions;
 
 namespace Server.Data.Repositories
 {
@@ -29,18 +28,20 @@ namespace Server.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetCoicesCountOnSemester(byte[] studentId, byte semester)
+        public async Task<Group?> GetGroupInfoByStudentId(byte[] studentId)
         {
-            var findFunc = async (Expression<Func<Student, byte>> selector) =>
+            return await _context.Students
+                .Where(s => s.StudentId.SequenceEqual(studentId))
+                .Select(s => new Group()
                 {
-                    return await _context.Students
-                        .Where(s => s.StudentId.SequenceEqual(studentId))
-                        .Select(selector)
-                        .FirstOrDefaultAsync();
-                };
-
-            return semester == 1 ? await findFunc(s => s.GroupNavigation.Nonparsemester)
-                : await findFunc(s => s.GroupNavigation.Parsemester);
+                    AdmissionYear = s.GroupNavigation.AdmissionYear,
+                    DurationOfStudy = s.GroupNavigation.DurationOfStudy,
+                    HasEnterChoise = s.GroupNavigation.HasEnterChoise,
+                    EduLevel = s.GroupNavigation.EduLevel,
+                    Nonparsemester = s.GroupNavigation.Nonparsemester,
+                    Parsemester = s.GroupNavigation.Parsemester,
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Group> Add(Group group)

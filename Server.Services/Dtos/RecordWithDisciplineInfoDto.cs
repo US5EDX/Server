@@ -13,6 +13,8 @@
         public string DisciplineCode { get; set; }
 
         public string DisciplineName { get; set; }
+
+        public bool IsYearLong { get; set; }
     }
 
     public class RecordWithDisciplineInfoDto : RecordShortDisciplineInfoDto
