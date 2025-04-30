@@ -39,8 +39,35 @@ namespace Server.Controllers
             return Ok(await _disciplinesService.GetDisciplines(pageNumber, pageSize, facultyId, holdingFilter, catalogFilter));
         }
 
+        [Authorize(Roles = "4")]
+        [HttpGet("getCountForStudent")]
+        public async Task<IActionResult> GetCountForStudent(
+            [BindRequired][Range(1, 3)] byte eduLevel,
+            [BindRequired][Range(2020, 2155)] short holding,
+            [BindRequired][Range(1, 2)] byte catalogFilter,
+            [BindRequired][Range(0, 2)] byte semesterFilter,
+            [Range(1, uint.MaxValue - 1)] uint? facultyFilter)
+        {
+            return Ok(await _disciplinesService.GetCountForStudent(eduLevel, holding, catalogFilter, semesterFilter, facultyFilter));
+        }
+
+        [Authorize(Roles = "4")]
+        [HttpGet("getDisciplinesForStudent/{pageNumber}/{pageSize}")]
+        public async Task<IActionResult> GetDisciplinesForStudent(
+            [BindRequired][FromRoute][Range(1, int.MaxValue - 1)] int pageNumber,
+            [BindRequired][FromRoute][Range(1, 100)] int pageSize,
+            [BindRequired][Range(1, 3)] byte eduLevel,
+            [BindRequired][Range(2020, 2155)] short holding,
+            [BindRequired][Range(1, 2)] byte catalogFilter,
+            [BindRequired][Range(0, 2)] byte semesterFilter,
+            [Range(1, uint.MaxValue - 1)] uint? facultyFilter)
+        {
+            return Ok(await _disciplinesService.GetDisciplinesForStudent(pageNumber, pageSize, eduLevel, holding,
+                catalogFilter, semesterFilter, facultyFilter));
+        }
+
         [Authorize]
-        [HttpPut("getDisciplineById/{disciplineId}")]
+        [HttpGet("getDisciplineById/{disciplineId}")]
         public async Task<IActionResult> GetById(
             [BindRequired][Range(1, uint.MaxValue - 1)] uint disciplineId)
         {

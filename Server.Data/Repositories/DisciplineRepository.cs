@@ -28,12 +28,27 @@ namespace Server.Data.Repositories
                 .CountAsync();
         }
 
+        public async Task<int> GetCountForStudent(byte eduLevel, short holding,
+            byte catalogFilter, byte semesterFilter, uint? facultyFilter)
+        {
+            var query = _context.Disciplines
+                .Where(d => d.EduLevel == eduLevel && d.CatalogType == catalogFilter && d.IsOpen && d.Holding == holding);
+
+            if (semesterFilter != 0)
+                query = query.Where(d => d.Semester == 0 || d.Semester == semesterFilter);
+
+            if (facultyFilter is not null)
+                query = query.Where(d => d.FacultyId == facultyFilter);
+
+            return await query.CountAsync();
+        }
+
         public async Task<Discipline?> GetById(uint disciplineId)
         {
             return await _context.Disciplines
                 .Include(d => d.Faculty)
                 .Include(d => d.Specialty)
-                .FirstOrDefaultAsync(g => g.DisciplineId == disciplineId);
+                .FirstOrDefaultAsync(d => d.DisciplineId == disciplineId);
         }
 
         public async Task<Discipline> Add(Discipline discipline)

@@ -48,6 +48,19 @@ namespace Server.Services.Services
             return disciplines;
         }
 
+        public async Task<int> GetCountForStudent(byte eduLevel, short holding,
+            byte catalogFilter, byte semesterFilter, uint? facultyFilter)
+        {
+            return await _disciplineRepository.GetCountForStudent(eduLevel, holding, catalogFilter, semesterFilter, facultyFilter);
+        }
+
+        public async Task<IEnumerable<DisciplineInfoForStudent>> GetDisciplinesForStudent(int pageNumber, int pageSize,
+            byte eduLevel, short holding, byte catalogFilter, byte semesterFilter, uint? facultyFilter)
+        {
+            return await _disciplineDtoRepository.GetDisciplinesForStudent(
+                pageNumber, pageSize, eduLevel, holding, catalogFilter, semesterFilter, facultyFilter);
+        }
+
         public async Task<DisciplineFullInfoDto?> GetById(uint disciplineId)
         {
             var discipline = await _disciplineRepository.GetById(disciplineId);

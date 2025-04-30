@@ -9,6 +9,7 @@ namespace Server.Models.Interfaces
         Task<Discipline?> GetById(uint disciplineId);
         Task<int> GetCount(uint facultyId, short eduYear);
         Task<int> GetCount(uint facultyId, short eduYear, byte catalogType);
+        Task<int> GetCountForStudent(byte eduLevel, short holding, byte catalogFilter, byte semesterFilter, uint? facultyFilter);
         Task<Discipline?> Update(Discipline discipline);
         Task<bool> UpdateStatus(uint disciplineId);
     }

@@ -4,6 +4,7 @@ using Server.Models.Models;
 using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
+using System.Drawing;
 using System.Linq.Expressions;
 
 namespace Server.Data.Repositories
@@ -45,6 +46,34 @@ namespace Server.Data.Repositories
             return await GetWithSubscribersAsync(_context.Disciplines
                                  .Where(d => d.FacultyId == facultyId && d.Holding == eduYear && d.CatalogType == catalogType),
                                  page, size);
+        }
+
+        public async Task<IEnumerable<DisciplineInfoForStudent>> GetDisciplinesForStudent(int pageNumber, int pageSize,
+            byte eduLevel, short holding, byte catalogFilter, byte semesterFilter, uint? facultyFilter)
+        {
+            var query = _context.Disciplines
+                .Where(d => d.EduLevel == eduLevel && d.CatalogType == catalogFilter && d.IsOpen && d.Holding == holding);
+
+            if (semesterFilter != 0)
+                query = query.Where(d => d.Semester == 0 || d.Semester == semesterFilter);
+
+            if (facultyFilter is not null)
+                query = query.Where(d => d.FacultyId == facultyFilter);
+
+            return await query
+                .OrderBy(d => d.DisciplineCode)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(d => new DisciplineInfoForStudent()
+                {
+                    DisciplineId = d.DisciplineId,
+                    DisciplineCode = d.DisciplineCode,
+                    DisciplineName = d.DisciplineName,
+                    Course = d.Course,
+                    Semester = d.Semester,
+                    IsYearLong = d.IsYearLong,
+                    Faculty = FacultyMapper.MapToFacultyDto(d.Faculty),
+                }).ToArrayAsync();
         }
 
         public async Task<IEnumerable<DisciplinePrintInfo>> GetDisciplinesOnSemester(uint facultyId, byte catalogType, short eduYear, byte semester)
