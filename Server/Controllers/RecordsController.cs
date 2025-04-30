@@ -56,6 +56,18 @@ namespace Server.Controllers
             return Ok(await _recordsService.GetWithDisciplineShort(studentId, year));
         }
 
+        [Authorize(Roles = "4")]
+        [HttpGet("getMadeChoices")]
+        public async Task<IActionResult> GetMadeChoices()
+        {
+            var studentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (studentId is null)
+                return BadRequest("Невалідний Id");
+
+            return Ok(await _recordsService.GetMadeChoices(studentId));
+        }
+
         [Authorize(Roles = "2")]
         [HttpPost("addRecord")]
         public async Task<IActionResult> AddRecord([FromBody] RecordRegistryDto record)

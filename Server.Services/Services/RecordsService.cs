@@ -103,6 +103,16 @@ namespace Server.Services.Services
             return await _recordDtoRepository.GetWithDisciplineShort(byteStudentId, year);
         }
 
+        public async Task<IEnumerable<StudentYearsRecordsDto>> GetMadeChoices(string studentId)
+        {
+            var isSuccess = Ulid.TryParse(studentId, out Ulid ulidStudentId);
+            if (!isSuccess)
+                throw new InvalidCastException("Невалідний Id");
+
+            var byteStudentId = ulidStudentId.ToByteArray();
+            return await _recordDtoRepository.GetMadeChoices(byteStudentId);
+        }
+
         public async Task<RecordWithDisciplineInfoDto> AddRecord(RecordRegistryDto record)
         {
             var newRecordId = await _recordRepository.Add(RecordMapper.MapToRecord(record));

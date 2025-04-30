@@ -8,5 +8,6 @@ namespace Server.Services.DtoInterfaces
         Task<RecordWithDisciplineInfoDto?> GetWithDisciplineById(uint recordId);
         Task<IEnumerable<RecordShortDisciplineInfoDto>> GetWithDisciplineShort(byte[] studentId, short year);
         Task<IEnumerable<StudentYearsRecordsDto>> GetStudentRecordsByYears(byte[] studentId, HashSet<short> years);
+        Task<IEnumerable<StudentYearsRecordsDto>> GetMadeChoices(byte[] byteStudentId);
     }
 }

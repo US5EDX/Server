@@ -45,8 +45,18 @@ namespace Server.Data.Repositories
 
         public async Task<IEnumerable<StudentYearsRecordsDto>> GetStudentRecordsByYears(byte[] studentId, HashSet<short> years)
         {
+            return await StudentYearsRecordsDtos(r => years.Contains(r.Holding) && r.StudentId.SequenceEqual(studentId));
+        }
+
+        public async Task<IEnumerable<StudentYearsRecordsDto>> GetMadeChoices(byte[] byteStudentId)
+        {
+            return await StudentYearsRecordsDtos(r => r.StudentId.SequenceEqual(byteStudentId));
+        }
+
+        private async Task<IEnumerable<StudentYearsRecordsDto>> StudentYearsRecordsDtos(Expression<Func<Record, bool>> predicate)
+        {
             return await _context.Records.Include(r => r.Discipline)
-                .Where(r => years.Contains(r.Holding) && r.StudentId.SequenceEqual(studentId))
+                .Where(predicate)
                 .Select(r => new StudentYearsRecordsDto()
                 {
                     Holding = r.Holding,
@@ -54,7 +64,7 @@ namespace Server.Data.Repositories
                     Approved = r.Approved,
                     DisciplineCode = r.Discipline.DisciplineCode,
                     DisciplineName = r.Discipline.DisciplineName
-                }).ToListAsync();
+                }).ToArrayAsync();
         }
 
         private IQueryable<RecordWithDisciplineInfoDto> GetQueryableRecordsWithDiscipline(
