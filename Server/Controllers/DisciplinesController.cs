@@ -44,11 +44,12 @@ namespace Server.Controllers
         public async Task<IActionResult> GetCountForStudent(
             [BindRequired][Range(1, 3)] byte eduLevel,
             [BindRequired][Range(2020, 2155)] short holding,
+            [BindRequired][Range(1, 4)] byte courseFilter,
             [BindRequired][Range(1, 2)] byte catalogFilter,
             [BindRequired][Range(0, 2)] byte semesterFilter,
             [Range(1, uint.MaxValue - 1)] uint? facultyFilter)
         {
-            return Ok(await _disciplinesService.GetCountForStudent(eduLevel, holding, catalogFilter, semesterFilter, facultyFilter));
+            return Ok(await _disciplinesService.GetCountForStudent(eduLevel, holding, catalogFilter, courseFilter, semesterFilter, facultyFilter));
         }
 
         [Authorize(Roles = "4")]
@@ -58,12 +59,13 @@ namespace Server.Controllers
             [BindRequired][FromRoute][Range(1, 100)] int pageSize,
             [BindRequired][Range(1, 3)] byte eduLevel,
             [BindRequired][Range(2020, 2155)] short holding,
+            [BindRequired][Range(1, 4)] byte courseFilter,
             [BindRequired][Range(1, 2)] byte catalogFilter,
             [BindRequired][Range(0, 2)] byte semesterFilter,
             [Range(1, uint.MaxValue - 1)] uint? facultyFilter)
         {
             return Ok(await _disciplinesService.GetDisciplinesForStudent(pageNumber, pageSize, eduLevel, holding,
-                catalogFilter, semesterFilter, facultyFilter));
+                catalogFilter, courseFilter, semesterFilter, facultyFilter));
         }
 
         [Authorize]
@@ -93,10 +95,11 @@ namespace Server.Controllers
         [HttpGet("getOptionsInfo")]
         public async Task<IActionResult> GetOptionsInfo([BindRequired][Range(2020, 2155)] short holding,
             [BindRequired][Range(1, 3)] byte eduLevel,
+            [BindRequired][Range(1, 4)] byte course,
             [BindRequired][Range(1, 2)] byte semester,
             [BindRequired][Length(1, 50)] string code)
         {
-            return Ok(await _disciplinesService.GetOptionsByCodeSearch(code, holding, eduLevel, semester));
+            return Ok(await _disciplinesService.GetOptionsByCodeSearch(code, holding, eduLevel, course, semester));
         }
 
         [Authorize(Roles = "2,3")]
@@ -118,7 +121,7 @@ namespace Server.Controllers
 
         [Authorize(Roles = "2,3")]
         [HttpPost("addDiscipline")]
-        public async Task<IActionResult> AddDiscipline([FromBody] DisciplineFullInfoDto discipline)
+        public async Task<IActionResult> AddDiscipline([FromBody] DisciplineRegistryDto discipline)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -130,7 +133,7 @@ namespace Server.Controllers
 
         [Authorize(Roles = "2,3")]
         [HttpPut("updateDiscipline")]
-        public async Task<IActionResult> UpdateDiscipline([FromBody] DisciplineFullInfoDto discipline)
+        public async Task<IActionResult> UpdateDiscipline([FromBody] DisciplineRegistryDto discipline)
         {
             if (discipline.DisciplineId == 0)
                 return BadRequest("Невалідні дані");

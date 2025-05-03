@@ -29,10 +29,11 @@ namespace Server.Data.Repositories
         }
 
         public async Task<int> GetCountForStudent(byte eduLevel, short holding,
-            byte catalogFilter, byte semesterFilter, uint? facultyFilter)
+            byte catalogFilter, byte courseMask, byte semesterFilter, uint? facultyFilter)
         {
             var query = _context.Disciplines
-                .Where(d => d.EduLevel == eduLevel && d.CatalogType == catalogFilter && d.IsOpen && d.Holding == holding);
+                .Where(d => d.EduLevel == eduLevel && d.CatalogType == catalogFilter && d.IsOpen
+                && (d.Course & courseMask) > 0 && d.Holding == holding);
 
             if (semesterFilter != 0)
                 query = query.Where(d => d.Semester == 0 || d.Semester == semesterFilter);

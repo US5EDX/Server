@@ -60,7 +60,6 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasComment("1 - USC\n2 - FSC")
                 .HasColumnName("catalogType");
             entity.Property(e => e.Course)
-                .HasMaxLength(100)
                 .HasColumnName("course");
             entity.Property(e => e.CreatorId)
                 .HasMaxLength(16)

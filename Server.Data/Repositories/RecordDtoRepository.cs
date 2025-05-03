@@ -3,6 +3,7 @@ using Server.Data.DbContexts;
 using Server.Models.Models;
 using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
+using Server.Services.Services;
 using System.Linq.Expressions;
 
 namespace Server.Data.Repositories
@@ -81,7 +82,7 @@ namespace Server.Data.Repositories
                     DisciplineId = r.Discipline.DisciplineId,
                     DisciplineCode = r.Discipline.DisciplineCode,
                     DisciplineName = r.Discipline.DisciplineName,
-                    Course = r.Discipline.Course,
+                    Course = ParserService.GetCourseString(r.Discipline.Course),
                     EduLevel = r.Discipline.EduLevel,
                     Semester = r.Discipline.Semester,
                     SubscribersCount = _context.Records

@@ -6,6 +6,7 @@ using Server.Services.Dtos;
 using Server.Services.Mappings;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -49,16 +50,20 @@ namespace Server.Services.Services
         }
 
         public async Task<int> GetCountForStudent(byte eduLevel, short holding,
-            byte catalogFilter, byte semesterFilter, uint? facultyFilter)
+            byte catalogFilter, byte courseFilter, byte semesterFilter, uint? facultyFilter)
         {
-            return await _disciplineRepository.GetCountForStudent(eduLevel, holding, catalogFilter, semesterFilter, facultyFilter);
+            byte courseMask = (byte)(1 << (courseFilter - 1));
+
+            return await _disciplineRepository.GetCountForStudent(eduLevel, holding, catalogFilter, courseMask, semesterFilter, facultyFilter);
         }
 
         public async Task<IEnumerable<DisciplineInfoForStudent>> GetDisciplinesForStudent(int pageNumber, int pageSize,
-            byte eduLevel, short holding, byte catalogFilter, byte semesterFilter, uint? facultyFilter)
+            byte eduLevel, short holding, byte catalogFilter, byte courseFilter, byte semesterFilter, uint? facultyFilter)
         {
+            byte courseMask = (byte)(1 << (courseFilter - 1));
+
             return await _disciplineDtoRepository.GetDisciplinesForStudent(
-                pageNumber, pageSize, eduLevel, holding, catalogFilter, semesterFilter, facultyFilter);
+                pageNumber, pageSize, eduLevel, holding, catalogFilter, courseMask, semesterFilter, facultyFilter);
         }
 
         public async Task<DisciplineFullInfoDto?> GetById(uint disciplineId)
@@ -75,9 +80,11 @@ namespace Server.Services.Services
         }
 
         public async Task<IEnumerable<DisciplineShortInfoDto>> GetOptionsByCodeSearch(
-            string code, short year, byte eduLevel, byte semester)
+            string code, short year, byte eduLevel, byte course, byte semester)
         {
-            return await _disciplineDtoRepository.GetByCodeSearchWithoutClosed(code, year, eduLevel, semester);
+            byte courseMask = (byte)(1 << (course - 1));
+
+            return await _disciplineDtoRepository.GetByCodeSearchWithoutClosed(code, year, eduLevel, courseMask, semester);
         }
 
         public DisciplineStatusThresholds GetThresholds()
@@ -95,7 +102,7 @@ namespace Server.Services.Services
             return new { Thresholds = _disciplineStatusThresholds, Disciplines = disciplines };
         }
 
-        public async Task<DisciplineFullInfoDto> AddDiscipline(DisciplineFullInfoDto discipline, string userId)
+        public async Task<DisciplineFullInfoDto> AddDiscipline(DisciplineRegistryDto discipline, string userId)
         {
             discipline.DisciplineId = 0;
             discipline.IsOpen = true;
@@ -108,7 +115,7 @@ namespace Server.Services.Services
             return DisciplineMapper.MapToDisciplineFullInfoDto(addedDiscipline);
         }
 
-        public async Task<DisciplineFullInfoDto?> UpdateDiscipline(DisciplineFullInfoDto discipline)
+        public async Task<DisciplineFullInfoDto?> UpdateDiscipline(DisciplineRegistryDto discipline)
         {
             var updatedDiscipline = await _disciplineRepository.Update(DisciplineMapper.MapToDiscipline(discipline));
 

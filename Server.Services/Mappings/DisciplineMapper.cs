@@ -1,5 +1,6 @@
 ﻿using Server.Models.Models;
 using Server.Services.Dtos;
+using Server.Services.Services;
 
 namespace Server.Services.Mappings
 {
@@ -16,7 +17,7 @@ namespace Server.Services.Mappings
                 Specialty = discipline.Specialty is null ? null : SpecialtyMapper.MapToSpecialtyDto(discipline.Specialty),
                 DisciplineName = discipline.DisciplineName,
                 EduLevel = discipline.EduLevel,
-                Course = discipline.Course,
+                Course = ParserService.GetCourseString(discipline.Course),
                 Semester = discipline.Semester,
                 Prerequisites = discipline.Prerequisites,
                 Interest = discipline.Interest,
@@ -29,15 +30,15 @@ namespace Server.Services.Mappings
             };
         }
 
-        public static Discipline MapToDiscipline(DisciplineFullInfoDto discipline)
+        public static Discipline MapToDiscipline(DisciplineRegistryDto discipline)
         {
             return new Discipline()
             {
                 DisciplineId = discipline.DisciplineId,
                 DisciplineCode = discipline.DisciplineCode,
                 CatalogType = discipline.CatalogType,
-                FacultyId = discipline.Faculty.FacultyId,
-                SpecialtyId = discipline.Specialty?.SpecialtyId,
+                FacultyId = discipline.FacultyId,
+                SpecialtyId = discipline.SpecialtyId,
                 DisciplineName = discipline.DisciplineName,
                 EduLevel = discipline.EduLevel,
                 Course = discipline.Course,

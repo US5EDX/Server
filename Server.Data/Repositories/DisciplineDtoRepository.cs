@@ -4,6 +4,7 @@ using Server.Models.Models;
 using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
+using Server.Services.Services;
 using System.Drawing;
 using System.Linq.Expressions;
 
@@ -26,9 +27,9 @@ namespace Server.Data.Repositories
         }
 
         public async Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearchWithoutClosed
-            (string code, short eduYear, byte eduLevel, byte semester)
+            (string code, short eduYear, byte eduLevel, byte courseMask, byte semester)
         {
-            return await GetByCodeSearch(d => d.Holding == eduYear && d.EduLevel == eduLevel &&
+            return await GetByCodeSearch(d => d.Holding == eduYear && d.EduLevel == eduLevel && (d.Course & courseMask) > 0 &&
                 (d.Semester == 0 || d.Semester == semester) && d.IsOpen == true && d.DisciplineCode.StartsWith(code));
         }
 
@@ -49,10 +50,11 @@ namespace Server.Data.Repositories
         }
 
         public async Task<IEnumerable<DisciplineInfoForStudent>> GetDisciplinesForStudent(int pageNumber, int pageSize,
-            byte eduLevel, short holding, byte catalogFilter, byte semesterFilter, uint? facultyFilter)
+            byte eduLevel, short holding, byte catalogFilter, byte courseMask, byte semesterFilter, uint? facultyFilter)
         {
             var query = _context.Disciplines
-                .Where(d => d.EduLevel == eduLevel && d.CatalogType == catalogFilter && d.IsOpen && d.Holding == holding);
+                .Where(d => d.EduLevel == eduLevel && d.CatalogType == catalogFilter && d.IsOpen &&
+                (d.Course & courseMask) > 0 && d.Holding == holding);
 
             if (semesterFilter != 0)
                 query = query.Where(d => d.Semester == 0 || d.Semester == semesterFilter);
@@ -69,7 +71,7 @@ namespace Server.Data.Repositories
                     DisciplineId = d.DisciplineId,
                     DisciplineCode = d.DisciplineCode,
                     DisciplineName = d.DisciplineName,
-                    Course = d.Course,
+                    Course = ParserService.GetCourseString(d.Course),
                     Semester = d.Semester,
                     IsYearLong = d.IsYearLong,
                     Faculty = FacultyMapper.MapToFacultyDto(d.Faculty),
@@ -88,7 +90,7 @@ namespace Server.Data.Repositories
                     StudentsCount = d.Records.Count(r => r.Holding == d.Holding && r.Semester == semester),
                     SpecialtyName = d.Specialty.SpecialtyName,
                     EduLevel = d.EduLevel,
-                    Course = d.Course,
+                    Course = ParserService.GetCourseString(d.Course),
                     Semester = d.Semester,
                     MinCount = d.MinCount,
                     MaxCount = d.MaxCount,
@@ -125,7 +127,7 @@ namespace Server.Data.Repositories
                                      Specialty = SpecialtyMapper.MapToSpecialtyDto(d.Specialty),
                                      DisciplineName = d.DisciplineName,
                                      EduLevel = d.EduLevel,
-                                     Course = d.Course,
+                                     Course = ParserService.GetCourseString(d.Course),
                                      Semester = d.Semester,
                                      Prerequisites = d.Prerequisites,
                                      Interest = d.Interest,

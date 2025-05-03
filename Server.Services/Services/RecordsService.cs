@@ -1,5 +1,4 @@
 ﻿using Server.Models.Interfaces;
-using Server.Models.Models;
 using Server.Services.DtoInterfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
@@ -160,19 +159,21 @@ namespace Server.Services.Services
             if (groupInfo is null)
                 throw new Exception("Проблеми з id");
 
-            var course = CalcuationService.CalculateGroupCourse(groupInfo); //can also be used later for discipline course check
+            var course = CalcuationService.CalculateGroupCourse(groupInfo);
 
             if (course == 0 || course == groupInfo.DurationOfStudy ||
                 (holding.EduYear == groupInfo.AdmissionYear && !groupInfo.HasEnterChoise))
                 throw new Exception("Вибір для вас не запланований");
 
+            byte courseMask = (byte)(1 << (course - ((course == 1 && groupInfo.HasEnterChoise) ? 1 : 0)));
+
             var record = RecordMapper.MapToRecord(inRecord);
 
             record.StudentId = byteStudentId;
 
-            var res = record.RecordId == 0 ? await _recordRepository.AddRecord(record, groupInfo.EduLevel,
+            var res = record.RecordId == 0 ? await _recordRepository.AddRecord(record, groupInfo.EduLevel, courseMask,
                 inRecord.Semester == 1 ? groupInfo.Nonparsemester : groupInfo.Parsemester) :
-                await _recordRepository.UpdateRecord(record, groupInfo.EduLevel);
+                await _recordRepository.UpdateRecord(record, groupInfo.EduLevel, courseMask);
 
             return res;
         }

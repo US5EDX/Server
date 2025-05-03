@@ -5,7 +5,7 @@ namespace Server.Services.Dtos
     public class FacultyDto
     {
         [Required]
-        [Range(1, uint.MaxValue)]
+        [Range(1, uint.MaxValue - 1)]
         public uint FacultyId { get; set; }
 
         [Required]

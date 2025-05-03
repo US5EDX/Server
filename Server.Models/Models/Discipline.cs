@@ -28,7 +28,7 @@ public partial class Discipline
     /// </summary>
     public byte EduLevel { get; set; }
 
-    public string Course { get; set; } = null!;
+    public byte Course { get; set; }
 
     /// <summary>
     /// 0 - both
