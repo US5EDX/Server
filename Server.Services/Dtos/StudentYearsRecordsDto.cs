@@ -6,7 +6,7 @@
 
         public byte Semester { get; set; }
 
-        public bool Approved { get; set; }
+        public byte Approved { get; set; }
 
         public string DisciplineCode { get; set; }
 

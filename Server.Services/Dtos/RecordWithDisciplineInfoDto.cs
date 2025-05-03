@@ -6,7 +6,7 @@
 
         public byte ChosenSemester { get; set; }
 
-        public bool Approved { get; set; }
+        public byte Approved { get; set; }
 
         public uint DisciplineId { get; set; }
 

@@ -23,7 +23,7 @@ public partial class Record
 
     public short Holding { get; set; }
 
-    public bool Approved { get; set; }
+    public byte Approved { get; set; }
 
     public virtual Discipline Discipline { get; set; } = null!;
 

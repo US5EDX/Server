@@ -44,20 +44,20 @@ namespace Server.Data.Repositories
                 return null;
 
             existingRecord.DisciplineId = record.DisciplineId;
-            existingRecord.Approved = false;
+            existingRecord.Approved = 0;
             await _context.SaveChangesAsync();
 
             return existingRecord.RecordId;
         }
 
-        public async Task<bool> UpdateStatus(uint recordId)
+        public async Task<bool> UpdateStatus(uint recordId, byte status)
         {
             var existingRecord = await _context.Records.FindAsync(recordId);
 
             if (existingRecord is null)
                 return false;
 
-            existingRecord.Approved = !existingRecord.Approved;
+            existingRecord.Approved = status;
 
             await _context.SaveChangesAsync();
 
@@ -67,7 +67,7 @@ namespace Server.Data.Repositories
         public async Task<bool?> Delete(uint recordId)
         {
             bool hasDependencies = await _context.Records
-                    .Where(r => r.RecordId == recordId && r.Approved == true).AnyAsync();
+                    .Where(r => r.RecordId == recordId && r.Approved != 0).AnyAsync();
 
             if (hasDependencies)
                 return null;
@@ -121,7 +121,7 @@ AND holding = {record.Holding} AND semester = {record.Semester} FOR UPDATE")
 
             var existingRecord = await _context.Records
                 .FromSql($@"SELECT * FROM Record WHERE recordId = {record.RecordId} AND studentId = {record.StudentId} 
-AND holding = {record.Holding} AND semester = {record.Semester} AND approved = FALSE FOR UPDATE").FirstOrDefaultAsync();
+AND holding = {record.Holding} AND semester = {record.Semester} AND approved = 0 FOR UPDATE").FirstOrDefaultAsync();
 
             if (existingRecord is null)
                 throw new InvalidOperationException("Неправильні дані");

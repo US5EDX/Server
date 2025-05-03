@@ -10,6 +10,6 @@ namespace Server.Services.Dtos
     {
         public string CodeName { get; set; }
 
-        public bool Approved { get; set; }
+        public byte Approved { get; set; }
     }
 }

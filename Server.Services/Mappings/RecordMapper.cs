@@ -51,7 +51,7 @@ namespace Server.Services.Mappings
                 DisciplineId = record.DisciplineId,
                 Semester = record.Semester,
                 Holding = record.Holding,
-                Approved = false,
+                Approved = 0,
             };
         }
 

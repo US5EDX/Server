@@ -20,6 +20,6 @@ namespace Server.Services.Dtos
 
         public byte Semester { get; set; }
 
-        public bool Approved { get; set; }
+        public byte Approved { get; set; }
     }
 }

@@ -116,7 +116,7 @@ namespace Server.Controllers
             var isDisciplineDeleted = await _recordsService.DeleteRecord(recordId);
 
             if (isDisciplineDeleted is null)
-                return BadRequest("Неможливо видалити, оскільки запис затверджено");
+                return BadRequest("Неможливо видалити, оскільки запис не є відхиленим");
 
             if (isDisciplineDeleted == false)
                 return NotFound("Вказаний запис не знайдено");
@@ -127,9 +127,10 @@ namespace Server.Controllers
         [Authorize(Roles = "2")]
         [HttpPut("updateRecordStatus/{recordId}")]
         public async Task<IActionResult> UpdateStatus(
-            [BindRequired][Range(1, uint.MaxValue - 1)] uint recordId)
+            [BindRequired][Range(1, uint.MaxValue - 1)] uint recordId,
+            [BindRequired][FromBody][Range(0, 2)] byte status)
         {
-            bool isSuccess = await _recordsService.UpdateStatus(recordId);
+            bool isSuccess = await _recordsService.UpdateStatus(recordId, status);
 
             if (isSuccess)
                 return Ok();

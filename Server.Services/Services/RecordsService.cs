@@ -134,9 +134,9 @@ namespace Server.Services.Services
             return await _recordRepository.Delete(recordId);
         }
 
-        public async Task<bool> UpdateStatus(uint recordId)
+        public async Task<bool> UpdateStatus(uint recordId, byte status)
         {
-            return await _recordRepository.UpdateStatus(recordId);
+            return await _recordRepository.UpdateStatus(recordId, status);
         }
 
         public async Task<uint> RegisterRecord(RecordRegistryWithoutStudent inRecord, string studentId)
