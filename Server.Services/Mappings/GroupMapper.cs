@@ -18,7 +18,8 @@ namespace Server.Services.Mappings
                 AdmissionYear = group.AdmissionYear,
                 Nonparsemester = group.Nonparsemester,
                 Parsemester = group.Parsemester,
-                HasEnterChoise = group.HasEnterChoise
+                HasEnterChoise = group.HasEnterChoise,
+                ChoiceDifference = group.ChoiceDifference,
             };
         }
 
@@ -36,6 +37,7 @@ namespace Server.Services.Mappings
                 Nonparsemester = group.Nonparsemester,
                 Parsemester = group.Parsemester,
                 HasEnterChoise = group.HasEnterChoise,
+                ChoiceDifference = group.ChoiceDifference,
                 CuratorInfo = group.Curator is null ? null : WorkerMapper.MapToWorkerShortInfoDto(group.Curator)
             };
         }
@@ -52,7 +54,8 @@ namespace Server.Services.Mappings
                 AdmissionYear = group.AdmissionYear,
                 Nonparsemester = group.Nonparsemester,
                 Parsemester = group.Parsemester,
-                HasEnterChoise = group.HasEnterChoise
+                HasEnterChoise = group.HasEnterChoise,
+                ChoiceDifference = group.ChoiceDifference,
             };
         }
     }

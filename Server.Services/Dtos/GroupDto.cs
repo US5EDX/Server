@@ -25,5 +25,7 @@ namespace Server.Services.Dtos
         public byte Parsemester { get; set; }
 
         public bool HasEnterChoise { get; set; }
+
+        public byte ChoiceDifference { get; set; }
     }
 }

@@ -22,6 +22,8 @@
 
         public bool HasEnterChoise { get; set; }
 
+        public byte ChoiceDifference { get; set; }
+
         public WorkerShortInfoDto? CuratorInfo { get; set; }
     }
 }

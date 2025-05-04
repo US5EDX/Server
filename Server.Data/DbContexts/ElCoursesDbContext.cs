@@ -164,6 +164,9 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.Property(e => e.HasEnterChoise)
                 .HasComment("When group must choose disciplines right after admission set to true")
                 .HasColumnName("hasEnterChoise");
+            entity.Property(e => e.ChoiceDifference)
+                .HasDefaultValueSql("'0'")
+                .HasColumnName("choiceDifference");
             entity.Property(e => e.CuratorId)
                 .HasMaxLength(16)
                 .IsFixedLength()

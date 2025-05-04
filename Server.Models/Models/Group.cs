@@ -37,6 +37,8 @@ public partial class Group
     /// </summary>
     public bool HasEnterChoise { get; set; }
 
+    public byte ChoiceDifference { get; set; }
+
     public byte[]? CuratorId { get; set; }
 
     public virtual Worker? Curator { get; set; }

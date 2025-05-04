@@ -40,6 +40,7 @@ namespace Server.Data.Repositories
                     EduLevel = s.GroupNavigation.EduLevel,
                     Nonparsemester = s.GroupNavigation.Nonparsemester,
                     Parsemester = s.GroupNavigation.Parsemester,
+                    ChoiceDifference = s.GroupNavigation.ChoiceDifference,
                 })
                 .FirstOrDefaultAsync();
         }
@@ -67,6 +68,7 @@ namespace Server.Data.Repositories
             existingGroup.Nonparsemester = group.Nonparsemester;
             existingGroup.Parsemester = group.Parsemester;
             existingGroup.HasEnterChoise = group.HasEnterChoise;
+            existingGroup.ChoiceDifference = group.ChoiceDifference;
             existingGroup.CuratorId = group.CuratorId;
 
             await _context.SaveChangesAsync();

@@ -38,6 +38,10 @@ namespace Server.Services.Dtos
         [Required]
         public bool HasEnterChoise { get; set; }
 
+        [Required]
+        [Range(0, 2)]
+        public byte ChoiceDifference { get; set; }
+
         [Length(26, 26)]
         public string? CuratorId { get; set; }
 
@@ -55,6 +59,13 @@ namespace Server.Services.Dtos
                 yield return new ValidationResult(
                     "Групи з однорічним навчанням без вибору при вступі не може бути",
                     [nameof(DurationOfStudy)]);
+            }
+
+            if (ChoiceDifference + DurationOfStudy > 4)
+            {
+                yield return new ValidationResult(
+                    "Не може бути різниці вибору, яка вказує на 5 курс",
+                    [nameof(ChoiceDifference)]);
             }
         }
     }

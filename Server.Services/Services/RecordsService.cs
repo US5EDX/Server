@@ -165,6 +165,8 @@ namespace Server.Services.Services
                 (holding.EduYear == groupInfo.AdmissionYear && !groupInfo.HasEnterChoise))
                 throw new Exception("Вибір для вас не запланований");
 
+            course += groupInfo.ChoiceDifference;
+
             byte courseMask = (byte)(1 << (course - ((course == 1 && groupInfo.HasEnterChoise) ? 1 : 0)));
 
             var record = RecordMapper.MapToRecord(inRecord);
