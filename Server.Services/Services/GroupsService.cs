@@ -19,9 +19,11 @@ namespace Server.Services.Services
             return group == null ? null : GroupMapper.MapToGroupDto(group);
         }
 
-        public async Task<IEnumerable<GroupFullInfoDto>> GetByFacultyId(uint facultyId)
+        public async Task<IEnumerable<GroupFullInfoDto>> GetByFacultyId(uint facultyId, string? curatorId = null)
         {
-            var specialties = await _groupRepository.GetByFacultyId(facultyId);
+            byte[]? byteCuratorId = curatorId is null ? null : GetWorkerIdAsByteArray(curatorId);
+
+            var specialties = await _groupRepository.GetByFacultyId(facultyId, byteCuratorId);
             return specialties.Select(GroupMapper.MapToGroupFullInfo);
         }
 

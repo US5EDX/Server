@@ -14,18 +14,21 @@ namespace Server.Data.Repositories
             _context = context;
         }
 
-        public async Task<int> GetCount(uint facultyId, short eduYear)
+        public async Task<int> GetCount(uint facultyId, short eduYear, byte? catalogType, byte? semesterFilter, byte[]? creatorFilter)
         {
-            return await _context.Disciplines
-                .Where(d => d.FacultyId == facultyId && d.Holding == eduYear)
-                .CountAsync();
-        }
+            var query = _context.Disciplines
+                .Where(d => d.FacultyId == facultyId && d.Holding == eduYear);
 
-        public async Task<int> GetCount(uint facultyId, short eduYear, byte catalogType)
-        {
-            return await _context.Disciplines
-                .Where(d => d.FacultyId == facultyId && d.Holding == eduYear && d.CatalogType == catalogType)
-                .CountAsync();
+            if (catalogType is not null)
+                query = query.Where(d => d.CatalogType == catalogType);
+
+            if (semesterFilter is not null)
+                query = query.Where(d => d.Semester == 0 || d.Semester == semesterFilter);
+
+            if (creatorFilter is not null)
+                query = query.Where(d => d.CreatorId.SequenceEqual(creatorFilter));
+
+            return await query.CountAsync();
         }
 
         public async Task<int> GetCountForStudent(byte eduLevel, short holding,

@@ -5,7 +5,7 @@ namespace Server.Models.Interfaces
     public interface IGroupRepository
     {
         Task<Group?> GetById(uint id);
-        Task<IEnumerable<Group>> GetByFacultyId(uint facultyId);
+        Task<IEnumerable<Group>> GetByFacultyId(uint facultyId, byte[]? curatorId);
         Task<Group?> GetGroupInfoByStudentId(byte[] studentId);
         Task<Group> Add(Group group);
         Task<Group?> Update(Group group);

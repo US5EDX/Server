@@ -23,9 +23,11 @@ namespace Server.Controllers
         [HttpGet("getCount")]
         public async Task<IActionResult> GetCount([BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId,
             [BindRequired][Range(2020, 2155)] short holdingFilter,
-            [Range(1, 2)] byte? catalogFilter)
+            [Range(1, 2)] byte? catalogFilter,
+            [Range(1, 2)] byte? semesterFilter,
+            [Length(26, 26)] string? lecturerFilter)
         {
-            return Ok(await _disciplinesService.GetCount(facultyId, holdingFilter, catalogFilter));
+            return Ok(await _disciplinesService.GetCount(facultyId, holdingFilter, catalogFilter, semesterFilter, lecturerFilter));
         }
 
         [Authorize(Roles = "2,3")]
@@ -34,9 +36,12 @@ namespace Server.Controllers
             [Required][Range(1, 100)] int pageSize,
             [BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId,
             [BindRequired][Range(2020, 2155)] short holdingFilter,
-            [Range(1, 2)] byte? catalogFilter)
+            [Range(1, 2)] byte? catalogFilter,
+            [Range(1, 2)] byte? semesterFilter,
+            [Length(26, 26)] string? lecturerFilter)
         {
-            return Ok(await _disciplinesService.GetDisciplines(pageNumber, pageSize, facultyId, holdingFilter, catalogFilter));
+            return Ok(await _disciplinesService.GetDisciplines(pageNumber, pageSize, facultyId,
+                holdingFilter, catalogFilter, semesterFilter, lecturerFilter));
         }
 
         [Authorize(Roles = "4")]

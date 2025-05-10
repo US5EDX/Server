@@ -31,22 +31,21 @@ namespace Server.Services.Services
             _disciplineStatusColors = disciplineStatusColors.Value;
         }
 
-        public async Task<int> GetCount(uint facultyId, short holdingFilter, byte? catalogFilter)
+        public async Task<int> GetCount(uint facultyId, short holdingFilter,
+            byte? catalogFilter, byte? semesterFilter, string? lecturerFilter)
         {
-            var disciplineCount = catalogFilter is null ? await _disciplineRepository.GetCount(facultyId, holdingFilter) :
-                await _disciplineRepository.GetCount(facultyId, holdingFilter, catalogFilter.Value);
+            var lecturerByteFilter = GetWorkerIdAsByteArray(lecturerFilter);
 
-            return disciplineCount;
+            return await _disciplineRepository.GetCount(facultyId, holdingFilter, catalogFilter, semesterFilter, lecturerByteFilter);
         }
 
         public async Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines(int pageNumber, int pageSize,
-            uint facultyId, short holdingFilter, byte? catalogFilter)
+            uint facultyId, short holdingFilter, byte? catalogFilter, byte? semesterFilter, string? lecturerFilter)
         {
-            var disciplines = catalogFilter is null ?
-                await _disciplineDtoRepository.GetDisciplines(pageNumber, pageSize, facultyId, holdingFilter) :
-                await _disciplineDtoRepository.GetDisciplines(pageNumber, pageSize, facultyId, holdingFilter, catalogFilter.Value);
+            var lecturerByteFilter = GetWorkerIdAsByteArray(lecturerFilter);
 
-            return disciplines;
+            return await _disciplineDtoRepository.GetDisciplines(pageNumber, pageSize, facultyId,
+                holdingFilter, catalogFilter, semesterFilter, lecturerByteFilter);
         }
 
         public async Task<int> GetCountForStudent(byte eduLevel, short holding,
@@ -133,6 +132,19 @@ namespace Server.Services.Services
         public async Task<bool> UpdateStatus(uint disciplineId)
         {
             return await _disciplineRepository.UpdateStatus(disciplineId);
+        }
+
+        private byte[]? GetWorkerIdAsByteArray(string? workerId)
+        {
+            if (workerId is null)
+                return null;
+
+            var isSuccess = Ulid.TryParse(workerId, out Ulid ulidWorkerId);
+
+            if (!isSuccess)
+                throw new InvalidCastException("Невалідний Id");
+
+            return ulidWorkerId.ToByteArray();
         }
     }
 }

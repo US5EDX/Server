@@ -19,13 +19,17 @@ namespace Server.Data.Repositories
             return await _context.Groups.FindAsync(id);
         }
 
-        public async Task<IEnumerable<Group>> GetByFacultyId(uint facultyId)
+        public async Task<IEnumerable<Group>> GetByFacultyId(uint facultyId, byte[]? curatorId)
         {
-            return await _context.Groups
+            var query = _context.Groups
                 .Include(g => g.Specialty)
                 .Include(g => g.Curator)
-                .Where(g => g.Specialty.FacultyId == facultyId)
-                .ToListAsync();
+                .Where(g => g.Specialty.FacultyId == facultyId);
+
+            if (curatorId is not null)
+                query = query.Where(g => g.CuratorId != null && g.CuratorId.SequenceEqual(curatorId));
+
+            return await query.ToListAsync();
         }
 
         public async Task<Group?> GetGroupInfoByStudentId(byte[] studentId)

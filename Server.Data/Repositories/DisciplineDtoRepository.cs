@@ -34,19 +34,21 @@ namespace Server.Data.Repositories
         }
 
         public async Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines
-            (int page, int size, uint facultyId, short eduYear)
+            (int page, int size, uint facultyId, short eduYear, byte? catalogType, byte? semesterFilter, byte[]? creatorFilter)
         {
-            return await GetWithSubscribersAsync(_context.Disciplines
-                                 .Where(d => d.FacultyId == facultyId && d.Holding == eduYear),
-                                 page, size);
-        }
+            var query = _context.Disciplines
+                                 .Where(d => d.FacultyId == facultyId && d.Holding == eduYear);
 
-        public async Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines
-            (int page, int size, uint facultyId, short eduYear, byte catalogType)
-        {
-            return await GetWithSubscribersAsync(_context.Disciplines
-                                 .Where(d => d.FacultyId == facultyId && d.Holding == eduYear && d.CatalogType == catalogType),
-                                 page, size);
+            if (catalogType is not null)
+                query = query.Where(d => d.CatalogType == catalogType);
+
+            if (semesterFilter is not null)
+                query = query.Where(d => d.Semester == 0 || d.Semester == semesterFilter);
+
+            if (creatorFilter is not null)
+                query = query.Where(d => d.CreatorId.SequenceEqual(creatorFilter));
+
+            return await GetWithSubscribersAsync(query, page, size);
         }
 
         public async Task<IEnumerable<DisciplineInfoForStudent>> GetDisciplinesForStudent(int pageNumber, int pageSize,

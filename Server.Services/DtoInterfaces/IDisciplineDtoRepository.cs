@@ -6,8 +6,7 @@ namespace Server.Services.DtoInterfaces
     {
         Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearchWithClosed(string code, short eduYear, byte eduLevel, byte semester);
         Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearchWithoutClosed(string code, short eduYear, byte eduLevel, byte couseMask, byte semester);
-        Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines(int page, int size, uint facultyId, short eduYear);
-        Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines(int page, int size, uint facultyId, short eduYear, byte catalogType);
+        Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines(int page, int size, uint facultyId, short eduYear, byte? catalogType, byte? semesterFilter, byte[]? creatorFilter);
         Task<IEnumerable<DisciplineInfoForStudent>> GetDisciplinesForStudent(int pageNumber, int pageSize, byte eduLevel, short holding, byte catalogFilter, byte courseMask, byte semesterFilter, uint? facultyFilter);
         Task<IEnumerable<DisciplinePrintInfo>> GetDisciplinesOnSemester(uint facultyId, byte catalogType, short eduYear, byte semester);
     }

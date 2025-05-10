@@ -28,7 +28,7 @@ namespace Server.Controllers
 
         [Authorize(Roles = "2")]
         [HttpGet("getAcademicians")]
-        public async Task<IActionResult> GetWorkers([Required][Range(1, int.MaxValue - 1)] int pageNumber,
+        public async Task<IActionResult> GetAcademicians([Required][Range(1, int.MaxValue - 1)] int pageNumber,
             [Required][Range(1, 1000)] int pageSize,
             [BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId,
             [Range(3, 4)] byte? roleFilter)

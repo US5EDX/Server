@@ -35,7 +35,7 @@ namespace Server.Controllers
             return Ok(await _recordsService.GetByStudentIdAndGroupId(studentId, groupId));
         }
 
-        [Authorize(Roles = "2")]
+        [Authorize(Roles = "2,3")]
         [HttpGet("getStudentYearRecords")]
         public async Task<IActionResult> GetStudentYearRecords([BindRequired][Length(26, 26)] string studentId,
             [BindRequired][Range(2020, 2155)] short year)
@@ -124,12 +124,17 @@ namespace Server.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "2")]
+        [Authorize(Roles = "2,3")]
         [HttpPut("updateRecordStatus/{recordId}")]
         public async Task<IActionResult> UpdateStatus(
             [BindRequired][Range(1, uint.MaxValue - 1)] uint recordId,
             [BindRequired][FromBody][Range(0, 2)] byte status)
         {
+            var requestUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (requestUserRole == "3" && status < 2)
+                return BadRequest("У доступі відмовлено");
+
             bool isSuccess = await _recordsService.UpdateStatus(recordId, status);
 
             if (isSuccess)

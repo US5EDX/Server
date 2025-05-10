@@ -28,5 +28,7 @@ namespace Server.Services.Dtos
         [Required]
         [Length(1, 100)]
         public string Position { get; set; }
+
+        public uint StudentGroupId { get; set; }
     }
 }

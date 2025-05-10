@@ -45,6 +45,8 @@ namespace Server.Services.Mappings
 
                 Position = user.Worker is not null ? user.Worker.Position :
                 ("студент - " + CalcuationService.CalculateGroupCourse(user.Student.GroupNavigation)),
+
+                StudentGroupId = user.Student is not null ? user.Student.Group : 0
             };
         }
 

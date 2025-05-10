@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Server.Services.Dtos;
 using Server.Services.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace Server.Controllers
 {
@@ -26,12 +27,19 @@ namespace Server.Controllers
             return Ok(await _groupsService.GetGroupById(groupId));
         }
 
-        [Authorize(Roles = "2")]
+        [Authorize(Roles = "2,3")]
         [HttpGet("getByFacultyId")]
         public async Task<IActionResult> GetGroups(
             [BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId)
         {
-            return Ok(await _groupsService.GetByFacultyId(facultyId));
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId is null)
+                return BadRequest("Неможливо виконати дію");
+
+            var requestUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            return Ok(await _groupsService.GetByFacultyId(facultyId, requestUserRole == "3" ? userId : null));
         }
 
         [Authorize(Roles = "2")]
