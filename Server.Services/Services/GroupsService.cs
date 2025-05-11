@@ -59,6 +59,11 @@ namespace Server.Services.Services
             return await _groupRepository.Delete(groupId);
         }
 
+        public async Task<bool> DeleteGraduated(uint facultyId)
+        {
+            return await _groupRepository.DeleteGraduated(facultyId);
+        }
+
         private byte[] GetWorkerIdAsByteArray(string workerId)
         {
             var isSuccess = Ulid.TryParse(workerId, out Ulid ulidWorkerId);

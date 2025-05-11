@@ -81,5 +81,20 @@ namespace Server.Controllers
 
             return Ok();
         }
+
+        [Authorize(Roles = "2")]
+        [HttpDelete("deleteGraduated/{facultyId}")]
+        public async Task<IActionResult> DeleteGraduated(
+            [BindRequired]
+            [Range(1, uint.MaxValue - 1)]
+            uint facultyId)
+        {
+            var isAnyDeleted = await _groupsService.DeleteGraduated(facultyId);
+
+            if (isAnyDeleted)
+                return Ok();
+
+            return NotFound("Не було знайдено груп, що випустились");
+        }
     }
 }

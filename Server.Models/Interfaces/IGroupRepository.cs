@@ -10,5 +10,6 @@ namespace Server.Models.Interfaces
         Task<Group> Add(Group group);
         Task<Group?> Update(Group group);
         Task<bool?> Delete(uint groupId);
+        Task<bool> DeleteGraduated(uint facultyId);
     }
 }

@@ -105,6 +105,17 @@ namespace Server.Data.Repositories
             return true;
         }
 
+        public async Task<bool> DeleteGraduated(uint facultyId)
+        {
+            var currDate = DateTime.Today;
+
+            var deletedRowsCount = await _context.Groups.Include(g => g.Specialty).Where(g => g.Specialty.FacultyId == facultyId &&
+            g.DurationOfStudy < ((currDate.Month > 6 ? currDate.Year : (currDate.Year - 1))
+            - g.AdmissionYear + 1)).ExecuteDeleteAsync();
+
+            return deletedRowsCount != 0;
+        }
+
         /// <summary>
         /// to delete group with students full info
         /// </summary>

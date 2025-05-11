@@ -111,7 +111,7 @@ namespace Server.Controllers
         [HttpGet("getTresholds")]
         public async Task<IActionResult> GetTresholds()
         {
-            return Ok(_disciplinesService.GetThresholds());
+            return Ok(await Task.Run(_disciplinesService.GetThresholds));
         }
 
         [Authorize(Roles = "2")]
