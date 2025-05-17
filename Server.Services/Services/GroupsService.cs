@@ -1,77 +1,69 @@
-﻿using Server.Models.Interfaces;
-using Server.Services.Dtos;
+﻿using Server.Models.CustomExceptions;
+using Server.Models.Enums;
+using Server.Models.Interfaces;
+using Server.Services.Dtos.GroupDtos;
 using Server.Services.Mappings;
+using Server.Services.Parsers;
 
-namespace Server.Services.Services
+namespace Server.Services.Services;
+
+public class GroupsService(IGroupRepository groupRepository)
 {
-    public class GroupsService
+    public async Task<GroupDto> GetByIdOrThrow(uint groupId)
     {
-        private readonly IGroupRepository _groupRepository;
+        var group = await groupRepository.GetById(groupId) ??
+            throw new NotFoundException("Групу не знайдено");
 
-        public GroupsService(IGroupRepository groupRepository)
-        {
-            _groupRepository = groupRepository;
-        }
+        return GroupMapper.MapToGroupDto(group);
+    }
 
-        public async Task<GroupDto?> GetGroupById(uint groupId)
-        {
-            var group = await _groupRepository.GetById(groupId);
-            return group == null ? null : GroupMapper.MapToGroupDto(group);
-        }
+    public async Task<IEnumerable<GroupFullInfoDto>> GetByFacultyId(uint facultyId, string? curatorId = null)
+    {
+        var byteCuratorId = UlidIdParser.ParseIdWithNull(curatorId);
 
-        public async Task<IEnumerable<GroupFullInfoDto>> GetByFacultyId(uint facultyId, string? curatorId = null)
-        {
-            byte[]? byteCuratorId = curatorId is null ? null : GetWorkerIdAsByteArray(curatorId);
+        var specialties = await groupRepository.GetByFacultyAndCuratorId(facultyId, byteCuratorId);
+        return specialties.Select(GroupMapper.MapToGroupFullInfo);
+    }
 
-            var specialties = await _groupRepository.GetByFacultyId(facultyId, byteCuratorId);
-            return specialties.Select(GroupMapper.MapToGroupFullInfo);
-        }
+    public async Task<GroupFullInfoDto> AddGroup(GroupRegistryDto group)
+    {
+        var newGroup = GroupMapper.MapToGroupWithoutCuratorId(group);
 
-        public async Task<GroupFullInfoDto> AddGroup(GroupRegistryDto group)
-        {
-            var newGroup = GroupMapper.MapToGroupWithoutCuratorId(group);
+        if (group.CuratorId is not null)
+            newGroup.CuratorId = UlidIdParser.ParseId(group.CuratorId);
 
-            if (group.CuratorId is not null)
-                newGroup.CuratorId = GetWorkerIdAsByteArray(group.CuratorId);
+        var addedGroup = await groupRepository.Add(newGroup);
 
-            var addedGroup = await _groupRepository.Add(newGroup);
+        return GroupMapper.MapToGroupFullInfo(addedGroup);
+    }
 
-            return GroupMapper.MapToGroupFullInfo(addedGroup);
-        }
+    public async Task<GroupFullInfoDto> UpdateOrThrow(GroupRegistryDto group)
+    {
+        if (group.GroupId is null) throw new BadRequestException("Невалідні вхідні дані");
 
-        public async Task<GroupFullInfoDto?> UpdateGroup(GroupRegistryDto group)
-        {
-            var updatingGroup = GroupMapper.MapToGroupWithoutCuratorId(group);
+        var updatingGroup = GroupMapper.MapToGroupWithoutCuratorId(group);
 
-            if (group.CuratorId is not null)
-                updatingGroup.CuratorId = GetWorkerIdAsByteArray(group.CuratorId);
+        if (group.CuratorId is not null)
+            updatingGroup.CuratorId = UlidIdParser.ParseId(group.CuratorId);
 
-            var updatedGroup = await _groupRepository.Update(updatingGroup);
+        var updatedGroup = await groupRepository.Update(updatingGroup) ??
+            throw new NotFoundException("Групу не знайдено");
 
-            if (updatedGroup is null)
-                return null;
+        return GroupMapper.MapToGroupFullInfo(updatedGroup);
+    }
 
-            return GroupMapper.MapToGroupFullInfo(updatedGroup);
-        }
+    public async Task DeleteOrThrow(uint groupId)
+    {
+        var result = await groupRepository.Delete(groupId, DateTime.Today);
 
-        public async Task<bool?> DeleteGroup(uint groupId)
-        {
-            return await _groupRepository.Delete(groupId);
-        }
+        result.ThrowIfFailed("Вказана група не знайдена",
+            "Неможливо видалити, оскільки у групі є студенти або група ще не закінчила навчання");
+    }
 
-        public async Task<bool> DeleteGraduated(uint facultyId)
-        {
-            return await _groupRepository.DeleteGraduated(facultyId);
-        }
+    public async Task DeleteGraduatedOrThrow(uint facultyId)
+    {
+        var isSuccess = await groupRepository.DeleteGraduated(facultyId, DateTime.Today);
 
-        private byte[] GetWorkerIdAsByteArray(string workerId)
-        {
-            var isSuccess = Ulid.TryParse(workerId, out Ulid ulidWorkerId);
-
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний Id");
-
-            return ulidWorkerId.ToByteArray();
-        }
+        if (!isSuccess) throw new NotFoundException("Не було знайдено груп, що випустились");
     }
 }

@@ -1,69 +1,42 @@
 ﻿using Server.Models.Models;
-using Server.Services.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Server.Services.Dtos.RecordDtos;
+using Server.Services.Dtos.StudentDtos;
 
-namespace Server.Services.Mappings
+namespace Server.Services.Mappings;
+
+public static class RecordMapper
 {
-    public class RecordMapper
-    {
-        public static RecordWithStudentInfoDto MapToRecordWithStudentInfo(Record record)
+    public static RecordDiscAndStatusPairDto MapToPairDto(Record record) =>
+        new()
         {
-            return new RecordWithStudentInfoDto()
-            {
-                StudentId = new Ulid(record.StudentId).ToString(),
-                Email = record.Student.User.Email,
-                FullName = record.Student.FullName,
-                FacultyName = record.Student.FacultyNavigation.FacultyName,
-                GroupCode = record.Student.GroupNavigation.GroupCode,
-                Semester = record.Semester,
-                Approved = record.Approved
-            };
-        }
+            CodeName = $"{record.Discipline.DisciplineCode} {record.Discipline.DisciplineName}",
+            Approved = record.Approved
+        };
 
-        public static RecordDiscAndStatusPairDto MapToPairDto(Record record)
+    public static RecordDiscAndStatusPairDto MapToPairDto(StudentYearsRecordsDto record) =>
+        new()
         {
-            return new RecordDiscAndStatusPairDto()
-            {
-                CodeName = $"{record.Discipline.DisciplineCode} {record.Discipline.DisciplineName}",
-                Approved = record.Approved
-            };
-        }
+            CodeName = $"{record.DisciplineCode} {record.DisciplineName}",
+            Approved = record.Approved
+        };
 
-        public static RecordDiscAndStatusPairDto MapToPairDto(StudentYearsRecordsDto record)
+    public static Record MapToRecord(RecordRegistryDto record) =>
+        new()
         {
-            return new RecordDiscAndStatusPairDto()
-            {
-                CodeName = $"{record.DisciplineCode} {record.DisciplineName}",
-                Approved = record.Approved
-            };
-        }
+            RecordId = record.RecordId ?? 0,
+            StudentId = Ulid.Parse(record.StudentId).ToByteArray(),
+            DisciplineId = record.DisciplineId,
+            Semester = record.Semester,
+            Holding = record.Holding,
+            Approved = Models.Enums.RecordStatus.NotApproved,
+        };
 
-        public static Record MapToRecord(RecordRegistryDto record)
+    public static Record MapToRecord(RecordRegistryWithoutStudent record) =>
+        new()
         {
-            return new Record()
-            {
-                RecordId = record.RecordId ?? 0,
-                StudentId = Ulid.Parse(record.StudentId).ToByteArray(),
-                DisciplineId = record.DisciplineId,
-                Semester = record.Semester,
-                Holding = record.Holding,
-                Approved = 0,
-            };
-        }
-
-        public static Record MapToRecord(RecordRegistryWithoutStudent record)
-        {
-            return new Record()
-            {
-                RecordId = record.RecordId ?? 0,
-                DisciplineId = record.DisciplineId,
-                Semester = record.Semester,
-                Holding = record.Holding,
-            };
-        }
-    }
+            RecordId = record.RecordId ?? 0,
+            DisciplineId = record.DisciplineId,
+            Semester = record.Semester,
+            Holding = record.Holding,
+        };
 }

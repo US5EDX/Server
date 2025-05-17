@@ -1,12 +1,12 @@
-﻿using Server.Models.Models;
+﻿using Server.Models.Enums;
+using Server.Models.Models;
 
-namespace Server.Models.Interfaces
+namespace Server.Models.Interfaces;
+
+public interface ISpecialtyRepository
 {
-    public interface ISpecialtyRepository
-    {
-        Task<Specialty> Add(Specialty specialty);
-        Task<bool?> Delete(uint specialtyId);
-        Task<IEnumerable<Specialty>> GetByFacultyId(uint facultyId);
-        Task<Specialty?> Update(Specialty specialty);
-    }
+    Task<IReadOnlyList<Specialty>> GetByFacultyId(uint facultyId);
+    Task<Specialty> Add(Specialty specialty);
+    Task<Specialty?> Update(Specialty specialty);
+    Task<DeleteResultEnum> DeleteAsync(uint specialtyId);
 }

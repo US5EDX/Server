@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Server.Models.Enums;
 
 namespace Server.Models.Models;
 
@@ -14,7 +13,7 @@ public partial class Group
     /// 2 - master
     /// 3 - phd
     /// </summary>
-    public byte EduLevel { get; set; }
+    public EduLevels EduLevel { get; set; }
 
     public byte DurationOfStudy { get; set; }
 

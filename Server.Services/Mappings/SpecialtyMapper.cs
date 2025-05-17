@@ -1,28 +1,21 @@
 ﻿using Server.Models.Models;
 using Server.Services.Dtos;
 
-namespace Server.Services.Mappings
-{
-    public class SpecialtyMapper
-    {
-        public static SpecialtyDto? MapToSpecialtyDto(Specialty? specialty)
-        {
-            return specialty is null ? null : new SpecialtyDto()
-            {
-                SpecialtyId = specialty.SpecialtyId,
-                SpecialtyName = specialty.SpecialtyName,
-                FacultyId = specialty.FacultyId,
-            };
-        }
+namespace Server.Services.Mappings;
 
-        public static Specialty MapToSpecialty(SpecialtyDto specailty)
+public static class SpecialtyMapper
+{
+    public static SpecialtyDto MapToSpecialtyDto(Specialty specialty) =>
+        new() { SpecialtyId = specialty.SpecialtyId, SpecialtyName = specialty.SpecialtyName, FacultyId = specialty.FacultyId };
+
+    public static SpecialtyDto? MapToNullableSpecialtyDto(Specialty? specialty) =>
+        specialty is null ? null : MapToSpecialtyDto(specialty);
+
+    public static Specialty MapToSpecialty(SpecialtyDto specailty) =>
+        new()
         {
-            return new Specialty()
-            {
-                SpecialtyId = specailty.SpecialtyId ?? 0,
-                SpecialtyName = specailty.SpecialtyName,
-                FacultyId = specailty.FacultyId ?? 0
-            };
-        }
-    }
+            SpecialtyId = specailty.SpecialtyId ?? 0,
+            SpecialtyName = specailty.SpecialtyName,
+            FacultyId = specailty.FacultyId ?? 0
+        };
 }

@@ -1,9 +1,8 @@
-﻿using Server.Services.Dtos;
+﻿using Server.Services.Dtos.WorkerDtos;
 
-namespace Server.Services.DtoInterfaces
+namespace Server.Services.DtoInterfaces;
+
+public interface IWorkerDtoRepository
 {
-    public interface IWorkerDtoRepository
-    {
-        Task<IEnumerable<WorkerShortInfoDto>> GetByFacultyAndFullName(uint faculty, string fullName);
-    }
+    Task<IReadOnlyList<WorkerShortInfoDto>> GetByFacultyAndFullName(uint faculty, string fullName);
 }

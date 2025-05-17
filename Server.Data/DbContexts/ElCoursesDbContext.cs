@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection.Metadata;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Logging;
-using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
+﻿using Microsoft.EntityFrameworkCore;
 using Server.Models.Models;
 
 namespace Server.Data.DbContexts;
@@ -58,6 +52,7 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.Property(e => e.DisciplineId).HasColumnName("disciplineId");
             entity.Property(e => e.CatalogType)
                 .HasComment("1 - USC\n2 - FSC")
+                .HasConversion<byte>()
                 .HasColumnName("catalogType");
             entity.Property(e => e.Course)
                 .HasColumnName("course");
@@ -73,6 +68,7 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasColumnName("disciplineName");
             entity.Property(e => e.EduLevel)
                 .HasComment("1 - bachelor\\n2 - master\\n3 - phd")
+                .HasConversion<byte>()
                 .HasColumnName("eduLevel");
             entity.Property(e => e.FacultyId).HasColumnName("facultyId");
             entity.Property(e => e.Holding)
@@ -99,6 +95,7 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasColumnName("prerequisites");
             entity.Property(e => e.Semester)
                 .HasComment("0 - both\n1 - non-pair\n2 - pair")
+                .HasConversion<byte>()
                 .HasColumnName("semester");
             entity.Property(e => e.SpecialtyId).HasColumnName("specialtyId");
             entity.Property(e => e.Url)
@@ -150,6 +147,7 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.Property(e => e.AdmissionYear).HasColumnName("admissionYear");
             entity.Property(e => e.EduLevel)
                 .HasComment("1 - bachelor\n2 - master\n3 - phd")
+                .HasConversion<byte>()
                 .HasColumnName("eduLevel");
             entity.Property(e => e.GroupCode)
                 .HasMaxLength(30)
@@ -213,13 +211,16 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
             entity.HasIndex(e => new { e.StudentId, e.Holding, e.Semester }, "idx_records_student_holding_semester");
 
             entity.Property(e => e.RecordId).HasColumnName("recordId");
-            entity.Property(e => e.Approved).HasColumnName("approved");
+            entity.Property(e => e.Approved)
+                .HasConversion<byte>()
+                .HasColumnName("approved");
             entity.Property(e => e.DisciplineId).HasColumnName("disciplineId");
             entity.Property(e => e.Holding)
                 .HasColumnType("year")
                 .HasColumnName("holding");
             entity.Property(e => e.Semester)
                 .HasComment("0 - both\\n1 - non-pair\\n2 - pair")
+                .HasConversion<byte>()
                 .HasColumnName("semester");
             entity.Property(e => e.StudentId)
                 .HasMaxLength(16)
@@ -316,6 +317,7 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
                 .HasColumnName("password");
             entity.Property(e => e.Role)
                 .HasComment("sup amdin - 1\\nadmin - 2\\nlector - 3\\nstudent -4")
+                .HasConversion<byte>()
                 .HasColumnName("role");
             entity.Property(e => e.Salt)
                 .HasMaxLength(16)

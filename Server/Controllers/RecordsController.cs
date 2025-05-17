@@ -1,146 +1,91 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Server.Services.Dtos;
+using Server.Models.CustomExceptions;
+using Server.Models.Enums;
+using Server.Services.Dtos.RecordDtos;
 using Server.Services.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
-namespace Server.Controllers
+namespace Server.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class RecordsController(RecordsService recordsService) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class RecordsController : ControllerBase
+    [Authorize(Roles = "2,3")]
+    [HttpGet("getSignedStudents")]
+    public async Task<IActionResult> GetSignedStudents(
+        [BindRequired][Range(1, uint.MaxValue - 1)] uint disciplineId,
+        [BindRequired][Range(1, 2)] Semesters semester) =>
+        Ok(await recordsService.GetSignedStudents(disciplineId, semester));
+
+    [Authorize(Roles = "2,3")]
+    [HttpGet("getByStudentIdAndGroupId")]
+    public async Task<IActionResult> GetStudentYearsRecords(
+        [BindRequired][Length(26, 26)] string studentId,
+        [BindRequired][Range(1, uint.MaxValue - 1)] uint groupId) =>
+        Ok(await recordsService.GetByStudentAndGroupIdOrThrow(studentId, groupId));
+
+    [Authorize(Roles = "2,3")]
+    [HttpGet("getStudentYearRecords")]
+    public async Task<IActionResult> GetStudentYearRecords(
+        [BindRequired][Length(26, 26)] string studentId,
+        [BindRequired][Range(2020, 2155)] short year) =>
+        Ok(await recordsService.GetRecordsByStudentIdAndYear(studentId, year));
+
+    [Authorize(Roles = "4")]
+    [HttpGet("getWithDisciplineShortInfo")]
+    public async Task<IActionResult> GetWithDisciplineShortInfo([BindRequired][Range(2020, 2155)] short year)
     {
-        private readonly RecordsService _recordsService;
+        var studentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Ok(await recordsService.GetWithDisciplineShort(studentId, year));
+    }
 
-        public RecordsController(RecordsService recordsService)
-        {
-            _recordsService = recordsService;
-        }
+    [Authorize(Roles = "4")]
+    [HttpGet("getMadeChoices")]
+    public async Task<IActionResult> GetMadeChoices() =>
+        Ok(await recordsService.GetMadeChoices(User.FindFirst(ClaimTypes.NameIdentifier)?.Value));
 
-        [Authorize(Roles = "2,3")]
-        [HttpGet("getSignedStudents")]
-        public async Task<IActionResult> GetCount([BindRequired][Range(1, uint.MaxValue - 1)] uint disciplineId,
-            [BindRequired][Range(1, 2)] byte semester)
-        {
-            return Ok(await _recordsService.GetSignedStudents(disciplineId, semester));
-        }
+    [Authorize(Roles = "2")]
+    [HttpPost("addRecord")]
+    public async Task<IActionResult> AddRecord([FromBody] RecordRegistryDto record) =>
+        StatusCode(StatusCodes.Status201Created, await recordsService.AddRecord(record));
 
-        [Authorize(Roles = "2,3")]
-        [HttpGet("getByStudentIdAndGroupId")]
-        public async Task<IActionResult> GetStudentYearsRecords([BindRequired][Length(26, 26)] string studentId,
-            [BindRequired][Range(1, uint.MaxValue - 1)] uint groupId)
-        {
-            return Ok(await _recordsService.GetByStudentIdAndGroupId(studentId, groupId));
-        }
+    [Authorize(Roles = "4")]
+    [HttpPost("registerRecord")]
+    public async Task<IActionResult> RegisterRecord([FromBody] RecordRegistryWithoutStudent record)
+    {
+        var studentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Ok(await recordsService.RegisterRecordOrThrow(record, studentId));
+    }
 
-        [Authorize(Roles = "2,3")]
-        [HttpGet("getStudentYearRecords")]
-        public async Task<IActionResult> GetStudentYearRecords([BindRequired][Length(26, 26)] string studentId,
-            [BindRequired][Range(2020, 2155)] short year)
-        {
-            return Ok(await _recordsService.GetRecordsByStudentIdAndYear(studentId, year));
-        }
+    [Authorize(Roles = "2")]
+    [HttpPut("updateRecord")]
+    public async Task<IActionResult> UpdateRecord([FromBody] RecordRegistryDto record) =>
+        Ok(await recordsService.UpdateOrThrow(record));
 
-        [Authorize(Roles = "4")]
-        [HttpGet("getWithDisciplineShortInfo")]
-        public async Task<IActionResult> GetWithDisciplineShortInfo(
-            [BindRequired][Range(2020, 2155)] short year)
-        {
-            var studentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    [Authorize(Roles = "2")]
+    [HttpDelete("deleteRecord/{recordId}")]
+    public async Task<IActionResult> DeleteDiscipline([BindRequired][Range(1, uint.MaxValue - 1)] uint recordId)
+    {
+        await recordsService.DeleteOrThrow(recordId);
+        return Ok();
+    }
 
-            if (studentId is null)
-                return BadRequest("Невалідний Id");
 
-            return Ok(await _recordsService.GetWithDisciplineShort(studentId, year));
-        }
+    [HttpPut("updateRecordStatus/{recordId}")]
+    public async Task<IActionResult> UpdateStatus(
+        [BindRequired][Range(1, uint.MaxValue - 1)] uint recordId,
+        [FromBody][BindRequired][Range(0, 2)] RecordStatus status)
+    {
+        var requestUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-        [Authorize(Roles = "4")]
-        [HttpGet("getMadeChoices")]
-        public async Task<IActionResult> GetMadeChoices()
-        {
-            var studentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requestUserRole == "3" && status < RecordStatus.UnderSuspicious)
+            throw new ForbidException("У доступі відмовлено");
 
-            if (studentId is null)
-                return BadRequest("Невалідний Id");
-
-            return Ok(await _recordsService.GetMadeChoices(studentId));
-        }
-
-        [Authorize(Roles = "2")]
-        [HttpPost("addRecord")]
-        public async Task<IActionResult> AddRecord([FromBody] RecordRegistryDto record)
-        {
-            if (record.RecordId is not null)
-                return BadRequest("Невалідні дані");
-
-            return StatusCode(StatusCodes.Status201Created, await _recordsService.AddRecord(record));
-        }
-
-        [Authorize(Roles = "4")]
-        [HttpPost("registerRecord")]
-        public async Task<IActionResult> RegisterRecord([FromBody] RecordRegistryWithoutStudent record)
-        {
-            var studentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (studentId is null)
-                return BadRequest("Невалідний Id");
-
-            var result = await _recordsService.RegisterRecord(record, studentId);
-
-            return Ok(result);
-        }
-
-        [Authorize(Roles = "2")]
-        [HttpPut("updateRecord")]
-        public async Task<IActionResult> UpdateRecord([FromBody] RecordRegistryDto record)
-        {
-            if (record.RecordId is null)
-                return BadRequest("Невалідні дані");
-
-            var updatedDiscipline = await _recordsService.UpdateRecord(record);
-
-            if (updatedDiscipline is null)
-                return NotFound("Вказаний запис не знайдена");
-
-            return Ok(updatedDiscipline);
-        }
-
-        [Authorize(Roles = "2")]
-        [HttpDelete("deleteRecord/{recordId}")]
-        public async Task<IActionResult> DeleteDiscipline(
-            [BindRequired]
-            [Range(1, uint.MaxValue - 1)]
-            uint recordId)
-        {
-            var isDisciplineDeleted = await _recordsService.DeleteRecord(recordId);
-
-            if (isDisciplineDeleted is null)
-                return BadRequest("Неможливо видалити, оскільки запис не є відхиленим");
-
-            if (isDisciplineDeleted == false)
-                return NotFound("Вказаний запис не знайдено");
-
-            return Ok();
-        }
-
-        [Authorize(Roles = "2,3")]
-        [HttpPut("updateRecordStatus/{recordId}")]
-        public async Task<IActionResult> UpdateStatus(
-            [BindRequired][Range(1, uint.MaxValue - 1)] uint recordId,
-            [BindRequired][FromBody][Range(0, 2)] byte status)
-        {
-            var requestUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-            if (requestUserRole == "3" && status < 2)
-                return BadRequest("У доступі відмовлено");
-
-            bool isSuccess = await _recordsService.UpdateStatus(recordId, status);
-
-            if (isSuccess)
-                return Ok();
-
-            return NotFound("Запис не знайдено");
-        }
+        await recordsService.UpdateStatusOrThrow(recordId, status);
+        return Ok();
     }
 }

@@ -1,100 +1,57 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Server.Services.Dtos;
+using Server.Models.CustomExceptions;
+using Server.Services.Dtos.GroupDtos;
 using Server.Services.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
-namespace Server.Controllers
+namespace Server.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class GroupsController(GroupsService groupsService) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class GroupsController : ControllerBase
+    [Authorize]
+    [HttpGet("getGroupById/{groupId}")]
+    public async Task<IActionResult> GetGroupById([BindRequired][Range(1, uint.MaxValue - 1)] uint groupId) =>
+        Ok(await groupsService.GetByIdOrThrow(groupId));
+
+    [Authorize(Roles = "2,3")]
+    [HttpGet("getByFacultyId")]
+    public async Task<IActionResult> GetGroups([BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId)
     {
-        private readonly GroupsService _groupsService;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+            throw new BadRequestException("Неможливо виконати дію");
 
-        public GroupsController(GroupsService groupsService)
-        {
-            _groupsService = groupsService;
-        }
+        var requestUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-        [Authorize]
-        [HttpGet("getGroupById/{groupId}")]
-        public async Task<IActionResult> GetGroupById(
-            [BindRequired][Range(1, uint.MaxValue - 1)] uint groupId)
-        {
-            return Ok(await _groupsService.GetGroupById(groupId));
-        }
+        return Ok(await groupsService.GetByFacultyId(facultyId, requestUserRole == "3" ? userId : null));
+    }
 
-        [Authorize(Roles = "2,3")]
-        [HttpGet("getByFacultyId")]
-        public async Task<IActionResult> GetGroups(
-            [BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    [Authorize(Roles = "2")]
+    [HttpPost("addGroup")]
+    public async Task<IActionResult> AddGroup([FromBody] GroupRegistryDto group) =>
+        StatusCode(StatusCodes.Status201Created, await groupsService.AddGroup(group));
 
-            if (userId is null)
-                return BadRequest("Неможливо виконати дію");
+    [Authorize(Roles = "2")]
+    [HttpPut("updateGroup")]
+    public async Task<IActionResult> UpdateGroup([FromBody] GroupRegistryDto group) => Ok(await groupsService.UpdateOrThrow(group));
 
-            var requestUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+    [Authorize(Roles = "2")]
+    [HttpDelete("deleteGroup/{groupId}")]
+    public async Task<IActionResult> DeleteGroup([BindRequired][Range(1, uint.MaxValue - 1)] uint groupId)
+    {
+        await groupsService.DeleteOrThrow(groupId);
+        return Ok();
+    }
 
-            return Ok(await _groupsService.GetByFacultyId(facultyId, requestUserRole == "3" ? userId : null));
-        }
-
-        [Authorize(Roles = "2")]
-        [HttpPost("addGroup")]
-        public async Task<IActionResult> AddGroup([FromBody] GroupRegistryDto group)
-        {
-            return StatusCode(StatusCodes.Status201Created, await _groupsService.AddGroup(group));
-        }
-
-        [Authorize(Roles = "2")]
-        [HttpPut("updateGroup")]
-        public async Task<IActionResult> UpdateGroup([FromBody] GroupRegistryDto group)
-        {
-            if (group.GroupId is null)
-                return BadRequest("Невалідні вхідні дані");
-
-            var updatedSpecialty = await _groupsService.UpdateGroup(group);
-
-            if (updatedSpecialty is null)
-                return NotFound("Вказана група не знайдена");
-
-            return Ok(updatedSpecialty);
-        }
-
-        [Authorize(Roles = "2")]
-        [HttpDelete("deleteGroup/{groupId}")]
-        public async Task<IActionResult> DeleteGroup(
-            [BindRequired]
-            [Range(1, uint.MaxValue - 1)]
-            uint groupId)
-        {
-            var isGroupDeleted = await _groupsService.DeleteGroup(groupId);
-
-            if (isGroupDeleted is null)
-                return BadRequest("Неможливо видалити, оскільки у групі є студенти або група ще не закінчила навчання");
-
-            if (isGroupDeleted == false)
-                return NotFound("Вказана група не знайдена");
-
-            return Ok();
-        }
-
-        [Authorize(Roles = "2")]
-        [HttpDelete("deleteGraduated/{facultyId}")]
-        public async Task<IActionResult> DeleteGraduated(
-            [BindRequired]
-            [Range(1, uint.MaxValue - 1)]
-            uint facultyId)
-        {
-            var isAnyDeleted = await _groupsService.DeleteGraduated(facultyId);
-
-            if (isAnyDeleted)
-                return Ok();
-
-            return NotFound("Не було знайдено груп, що випустились");
-        }
+    [Authorize(Roles = "2")]
+    [HttpDelete("deleteGraduated/{facultyId}")]
+    public async Task<IActionResult> DeleteGraduated([BindRequired][Range(1, uint.MaxValue - 1)] uint facultyId)
+    {
+        await groupsService.DeleteGraduatedOrThrow(facultyId);
+        return Ok();
     }
 }

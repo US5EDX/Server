@@ -3,12 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Server.Data.DbContexts;
 using Server.Data.ExternalServices;
-using Server.Models.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Server.Models.Interfaces.ExternalInterfaces;
 
 namespace Server.Data.Extensions
 {

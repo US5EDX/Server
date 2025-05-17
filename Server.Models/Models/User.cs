@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Server.Models.Enums;
 
 namespace Server.Models.Models;
 
@@ -19,7 +18,7 @@ public partial class User
     /// lector - 3
     /// student -4
     /// </summary>
-    public byte Role { get; set; }
+    public Roles Role { get; set; }
 
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiry { get; set; }

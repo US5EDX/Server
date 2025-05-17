@@ -1,37 +1,19 @@
-﻿using Server.Models.Interfaces;
-using Server.Services.Dtos;
+﻿using Server.Models.Enums;
+using Server.Models.Interfaces;
+using Server.Services.Dtos.UserDtos;
 using Server.Services.Mappings;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Server.Services.Services
+namespace Server.Services.Services;
+
+public class AcademiciansService(IAcademicianRepository academicianRepository)
 {
-    public class AcademiciansService
+    public async Task<int> GetCount(uint facultyId, Roles? roleFilter) =>
+        await academicianRepository.GetCount(facultyId, roleFilter);
+
+    public async Task<IEnumerable<UserFullInfoDto>> GetAcademicians(int pageNumber, int pageSize, uint facultyId, Roles? roleFilter)
     {
-        private readonly IAcademicianRepository _academicianRepository;
+        var workers = await academicianRepository.GetAcademicians(pageNumber, pageSize, facultyId, roleFilter);
 
-        public AcademiciansService(IAcademicianRepository academicianRepository)
-        {
-            _academicianRepository = academicianRepository;
-        }
-
-        public async Task<int> GetCount(uint facultyId, byte? roleFilter)
-        {
-            var academiciansCount = roleFilter is null ? await _academicianRepository.GetCount(facultyId) :
-                await _academicianRepository.GetCount(facultyId, roleFilter.Value);
-
-            return academiciansCount;
-        }
-
-        public async Task<IEnumerable<UserFullInfoDto>> GetAcademicians(int pageNumber, int pageSize, uint facultyId, byte? roleFilter)
-        {
-            var workers = roleFilter is null ? await _academicianRepository.GetWorkers(pageNumber, pageSize, facultyId) :
-                await _academicianRepository.GetWorkers(pageNumber, pageSize, facultyId, roleFilter.Value);
-
-            return workers.Select(UserMapper.MapToUserFullInfoDto);
-        }
+        return workers.Select(UserMapper.MapToUserFullInfoDto);
     }
 }

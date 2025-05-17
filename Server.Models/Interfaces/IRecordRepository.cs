@@ -1,15 +1,14 @@
-﻿using Server.Models.Models;
+﻿using Server.Models.Enums;
+using Server.Models.Models;
 
-namespace Server.Models.Interfaces
+namespace Server.Models.Interfaces;
+
+public interface IRecordRepository
 {
-    public interface IRecordRepository
-    {
-        Task<uint> Add(Record record);
-        Task<bool?> Delete(uint recordId);
-        Task<IEnumerable<Record>> GetRecordsWithStudentInfo(uint disciplineId, byte semester);
-        Task<uint?> Update(Record record);
-        Task<bool> UpdateStatus(uint recordId, byte status);
-        Task<uint> AddRecord(Record record, byte eduLevel, byte courseMask, int choicesCount);
-        Task<uint> UpdateRecord(Record record, byte eduLevel, byte courseMask);
-    }
+    Task<uint> Add(Record record);
+    Task<uint?> Update(Record record);
+    Task<bool> UpdateStatus(uint recordId, RecordStatus status);
+    Task<DeleteResultEnum> Delete(uint recordId);
+    Task<uint> AddRecordOrThrow(Record record, EduLevels eduLevel, byte courseMask, int choicesCount);
+    Task<uint> UpdateRecordOrThrow(Record record, EduLevels eduLevel, byte courseMask);
 }

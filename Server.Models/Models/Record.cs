@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Server.Models.Enums;
 
 namespace Server.Models.Models;
 
@@ -19,11 +18,11 @@ public partial class Record
     /// 1 - non-pair
     /// 2 - pair
     /// </summary>
-    public byte Semester { get; set; }
+    public Semesters Semester { get; set; }
 
     public short Holding { get; set; }
 
-    public byte Approved { get; set; }
+    public RecordStatus Approved { get; set; }
 
     public virtual Discipline Discipline { get; set; } = null!;
 

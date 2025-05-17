@@ -1,54 +1,41 @@
-﻿using Server.Models.Models;
-using Server.Services.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Server.Models.Enums;
+using Server.Models.Models;
+using Server.Services.Converters;
+using Server.Services.Dtos.StudentDtos;
 
-namespace Server.Services.Mappings
+namespace Server.Services.Mappings;
+
+public static class StudentMapper
 {
-    public class StudentMapper
-    {
-        public static StudentWithRecordsDto MapToStudentWithRecordsDto(Student student)
+    public static StudentWithRecordsDto MapToStudentWithRecordsDto(Student student) =>
+        new()
         {
-            return new StudentWithRecordsDto()
-            {
-                StudentId = new Ulid(student.StudentId).ToString(),
-                Email = student.User.Email,
-                FullName = student.FullName,
-                Headman = student.Headman,
-                Nonparsemester = student.Records.Where(r => r.Semester == 1).Select(RecordMapper.MapToPairDto).ToList(),
-                Parsemester = student.Records.Where(r => r.Semester == 2).Select(RecordMapper.MapToPairDto).ToList(),
-            };
-        }
+            StudentId = UlidConverter.ByteIdToString(student.StudentId),
+            Email = student.User.Email,
+            FullName = student.FullName,
+            Headman = student.Headman,
+            Nonparsemester = student.Records.Where(r => r.Semester == Semesters.Fall).Select(RecordMapper.MapToPairDto).ToList(),
+            Parsemester = student.Records.Where(r => r.Semester == Semesters.Spring).Select(RecordMapper.MapToPairDto).ToList(),
+        };
 
-        public static Student MapToStudentWithUserWithoutId(StudentRegistryDto student)
+    public static Student MapToStudentWithUserWithoutId(StudentRegistryDto student) =>
+        new()
         {
-            return new Student()
-            {
-                FullName = student.FullName,
-                Faculty = student.Faculty,
-                Group = student.Group,
-                Headman = student.Headman,
-                User = new User()
-                {
-                    Email = student.Email
-                }
-            };
-        }
+            FullName = student.FullName,
+            Faculty = student.Faculty,
+            Group = student.Group,
+            Headman = student.Headman,
+            User = new User() { Email = student.Email }
+        };
 
-        public static StudentRegistryDto MapToStudentRegistryDto(Student student)
+    public static StudentRegistryDto MapToStudentRegistryDto(Student student) =>
+        new()
         {
-            return new StudentRegistryDto()
-            {
-                StudentId = new Ulid(student.StudentId).ToString(),
-                Email = student.User.Email,
-                FullName = student.FullName,
-                Faculty = student.Faculty,
-                Group = student.Group,
-                Headman = student.Headman,
-            };
-        }
-    }
+            StudentId = UlidConverter.ByteIdToString(student.StudentId),
+            Email = student.User.Email,
+            FullName = student.FullName,
+            Faculty = student.Faculty,
+            Group = student.Group,
+            Headman = student.Headman,
+        };
 }

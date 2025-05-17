@@ -1,13 +1,9 @@
 ﻿using Server.Models.Models;
-using Server.Services.Dtos;
+using Server.Services.Dtos.WorkerDtos;
 
-namespace Server.Services.Mappings
+namespace Server.Services.Mappings;
+
+public class WorkerMapper
 {
-    public class WorkerMapper
-    {
-        public static WorkerShortInfoDto MapToWorkerShortInfoDto(Worker worker)
-        {
-            return new WorkerShortInfoDto(worker.WorkerId, worker.FullName);
-        }
-    }
+    public static WorkerShortInfoDto MapToWorkerShortInfoDto(Worker worker) => new(worker.WorkerId, worker.FullName);
 }

@@ -1,9 +1,8 @@
-﻿using Server.Services.Dtos;
+﻿using Server.Services.Dtos.StudentDtos;
 
-namespace Server.Services.DtoInterfaces
+namespace Server.Services.DtoInterfaces;
+
+public interface IStudentDtoRepository
 {
-    public interface IStudentDtoRepository
-    {
-        Task<IEnumerable<StudentWithAllRecordsInfo>> GetWithAllRecordsByGroupId(uint groupId);
-    }
+    Task<IReadOnlyList<StudentWithAllRecordsInfo>> GetWithAllRecordsByGroupId(uint groupId);
 }

@@ -1,13 +1,13 @@
-﻿using Server.Models.Models;
+﻿using Server.Models.Enums;
+using Server.Models.Models;
 
-namespace Server.Models.Interfaces
+namespace Server.Models.Interfaces;
+
+public interface IStudentRepository
 {
-    public interface IStudentRepository
-    {
-        Task<User> Add(User user);
-        Task<IEnumerable<User>> AddRange(List<User> users);
-        Task<bool?> Delete(byte[] userId, int requestUserRole);
-        Task<IEnumerable<Student>> GetWithLastReocorsByGroupId(uint groupId, short holding);
-        Task<Student?> Update(Student student);
-    }
+    Task<IReadOnlyList<Student>> GetWithLastReocorsByGroupId(uint groupId, short holding);
+    Task<User> Add(User user);
+    Task<IReadOnlyList<User>> AddRange(List<User> users, IEnumerable<Student> studentPart);
+    Task<Student?> Update(Student student);
+    Task<DeleteResultEnum> Delete(byte[] userId, Roles requestUserRole, short deleteBorderYear);
 }

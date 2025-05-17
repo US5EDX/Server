@@ -1,12 +1,12 @@
-﻿using Server.Models.Models;
+﻿using Server.Models.Enums;
+using Server.Models.Models;
 
-namespace Server.Models.Interfaces
+namespace Server.Models.Interfaces;
+
+public interface IFacultyRepository
 {
-    public interface IFacultyRepository
-    {
-        Task<IEnumerable<Faculty>> GetAll();
-        Task<Faculty> Add(Faculty faculty);
-        Task<Faculty?> Update(Faculty faculty);
-        Task<bool?> Delete(uint facultyId);
-    }
+    Task<IReadOnlyList<Faculty>> GetAll();
+    Task<Faculty> Add(Faculty faculty);
+    Task<int> Update(Faculty faculty);
+    Task<DeleteResultEnum> Delete(uint facultyId);
 }

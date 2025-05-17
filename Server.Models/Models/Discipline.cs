@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Server.Models.Enums;
 
 namespace Server.Models.Models;
 
@@ -13,7 +12,7 @@ public partial class Discipline
     /// 1 - USC
     /// 2 - FSC
     /// </summary>
-    public byte CatalogType { get; set; }
+    public CatalogTypes CatalogType { get; set; }
 
     public uint FacultyId { get; set; }
 
@@ -26,7 +25,7 @@ public partial class Discipline
     /// 2 - master
     /// 3 - phd
     /// </summary>
-    public byte EduLevel { get; set; }
+    public EduLevels EduLevel { get; set; }
 
     public byte Course { get; set; }
 
@@ -35,7 +34,7 @@ public partial class Discipline
     /// 1 - non-pair
     /// 2 - pair
     /// </summary>
-    public byte Semester { get; set; }
+    public Semesters Semester { get; set; }
 
     public string Prerequisites { get; set; } = null!;
 

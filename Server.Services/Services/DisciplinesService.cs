@@ -1,150 +1,124 @@
 ﻿using Microsoft.Extensions.Options;
+using Server.Models.CustomExceptions;
+using Server.Models.Enums;
 using Server.Models.Interfaces;
-using Server.Models.Models;
+using Server.Services.Converters;
 using Server.Services.DtoInterfaces;
-using Server.Services.Dtos;
+using Server.Services.Dtos.DisciplineDtos;
 using Server.Services.Mappings;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
+using Server.Services.Parsers;
 
-namespace Server.Services.Services
+namespace Server.Services.Services;
+
+public class DisciplinesService(IDisciplineRepository disciplineRepository, IDisciplineDtoRepository disciplineDtoRepository,
+    IOptions<DisciplineStatusThresholds> disciplineStatusThresholds, IOptions<DisciplineStatusColors> disciplineStatusColors)
 {
-    public class DisciplinesService
+    private readonly DisciplineStatusThresholds _disciplineStatusThresholds = disciplineStatusThresholds.Value;
+    private readonly DisciplineStatusColors _disciplineStatusColors = disciplineStatusColors.Value;
+
+    public async Task<int> GetCount(uint facultyId, short holdingFilter,
+        CatalogTypes? catalogFilter, Semesters? semesterFilter, string? lecturerFilter)
     {
-        private readonly IDisciplineRepository _disciplineRepository;
-        private readonly IDisciplineDtoRepository _disciplineDtoRepository;
+        var lecturerByteFilter = UlidIdParser.ParseIdWithNull(lecturerFilter);
 
-        private readonly DisciplineStatusThresholds _disciplineStatusThresholds;
-        private readonly DisciplineStatusColors _disciplineStatusColors;
+        return await disciplineRepository.GetCount(facultyId, holdingFilter, catalogFilter, semesterFilter, lecturerByteFilter);
+    }
 
-        public DisciplinesService(IDisciplineRepository disciplineRepository, IDisciplineDtoRepository disciplineDtoRepository,
-            IOptions<DisciplineStatusThresholds> disciplineStatusThresholds, IOptions<DisciplineStatusColors> disciplineStatusColors)
-        {
-            _disciplineRepository = disciplineRepository;
-            _disciplineDtoRepository = disciplineDtoRepository;
-            _disciplineStatusThresholds = disciplineStatusThresholds.Value;
-            _disciplineStatusColors = disciplineStatusColors.Value;
-        }
+    public async Task<IReadOnlyList<DisciplineWithSubCountDto>> GetDisciplines(int pageNumber, int pageSize,
+        uint facultyId, short holdingFilter, CatalogTypes? catalogFilter, Semesters? semesterFilter, string? lecturerFilter)
+    {
+        var lecturerByteFilter = UlidIdParser.ParseIdWithNull(lecturerFilter);
 
-        public async Task<int> GetCount(uint facultyId, short holdingFilter,
-            byte? catalogFilter, byte? semesterFilter, string? lecturerFilter)
-        {
-            var lecturerByteFilter = GetWorkerIdAsByteArray(lecturerFilter);
+        return await disciplineDtoRepository.Get(pageNumber, pageSize, facultyId,
+            holdingFilter, catalogFilter, semesterFilter, lecturerByteFilter);
+    }
 
-            return await _disciplineRepository.GetCount(facultyId, holdingFilter, catalogFilter, semesterFilter, lecturerByteFilter);
-        }
+    public async Task<int> GetCountForStudent(EduLevels eduLevel, short holding,
+        CatalogTypes catalogFilter, byte courseFilter, Semesters semesterFilter, uint? facultyFilter)
+    {
+        byte courseMask = CourseToCourseMaskConverter.ConvertToCourseMask(courseFilter);
 
-        public async Task<IEnumerable<DisciplineWithSubCountDto>> GetDisciplines(int pageNumber, int pageSize,
-            uint facultyId, short holdingFilter, byte? catalogFilter, byte? semesterFilter, string? lecturerFilter)
-        {
-            var lecturerByteFilter = GetWorkerIdAsByteArray(lecturerFilter);
+        return await disciplineRepository.GetCountForStudent(eduLevel, holding,
+            catalogFilter, courseMask, semesterFilter, facultyFilter);
+    }
 
-            return await _disciplineDtoRepository.GetDisciplines(pageNumber, pageSize, facultyId,
-                holdingFilter, catalogFilter, semesterFilter, lecturerByteFilter);
-        }
+    public async Task<IReadOnlyList<DisciplineInfoForStudent>> GetDisciplinesForStudent(int pageNumber, int pageSize,
+        EduLevels eduLevel, short holding, CatalogTypes catalogFilter, byte courseFilter,
+        Semesters semesterFilter, uint? facultyFilter)
+    {
+        byte courseMask = CourseToCourseMaskConverter.ConvertToCourseMask(courseFilter);
 
-        public async Task<int> GetCountForStudent(byte eduLevel, short holding,
-            byte catalogFilter, byte courseFilter, byte semesterFilter, uint? facultyFilter)
-        {
-            byte courseMask = (byte)(1 << (courseFilter - 1));
+        return await disciplineDtoRepository.GetForStudentAsync(
+            pageNumber, pageSize, eduLevel, holding, catalogFilter, courseMask, semesterFilter, facultyFilter);
+    }
 
-            return await _disciplineRepository.GetCountForStudent(eduLevel, holding, catalogFilter, courseMask, semesterFilter, facultyFilter);
-        }
+    public async Task<DisciplineFullInfoDto?> GetByIdOrThrow(uint disciplineId)
+    {
+        var discipline = await disciplineRepository.GetById(disciplineId) ?? throw new NotFoundException("Дисципліну не знайдено");
 
-        public async Task<IEnumerable<DisciplineInfoForStudent>> GetDisciplinesForStudent(int pageNumber, int pageSize,
-            byte eduLevel, short holding, byte catalogFilter, byte courseFilter, byte semesterFilter, uint? facultyFilter)
-        {
-            byte courseMask = (byte)(1 << (courseFilter - 1));
+        return DisciplineMapper.MapToDisciplineFullInfoDto(discipline);
+    }
 
-            return await _disciplineDtoRepository.GetDisciplinesForStudent(
-                pageNumber, pageSize, eduLevel, holding, catalogFilter, courseMask, semesterFilter, facultyFilter);
-        }
+    public async Task<IReadOnlyList<DisciplineShortInfoDto>> GetByCodeSearchYearEduLevelSemester(
+        string code, short year, EduLevels eduLevel, Semesters semester) =>
+        await disciplineDtoRepository.GetSearchResultsForAdmin(code, year, eduLevel, semester);
 
-        public async Task<DisciplineFullInfoDto?> GetById(uint disciplineId)
-        {
-            var discipline = await _disciplineRepository.GetById(disciplineId);
+    public async Task<IReadOnlyList<DisciplineShortInfoDto>> GetOptionsByCodeSearch(
+        string code, short year, EduLevels eduLevel, byte course, Semesters semester)
+    {
+        byte courseMask = CourseToCourseMaskConverter.ConvertToCourseMask(course);
 
-            return discipline is null ? null : DisciplineMapper.MapToDisciplineFullInfoDto(discipline);
-        }
+        return await disciplineDtoRepository.GetSearchResultsForStudent(code, year, eduLevel, courseMask, semester);
+    }
 
-        public async Task<IEnumerable<DisciplineShortInfoDto>> GetByCodeSearchYearEduLevelSemester(
-            string code, short year, byte eduLevel, byte semester)
-        {
-            return await _disciplineDtoRepository.GetByCodeSearchWithClosed(code, year, eduLevel, semester);
-        }
+    public DisciplineStatusThresholds GetThresholds() => _disciplineStatusThresholds;
 
-        public async Task<IEnumerable<DisciplineShortInfoDto>> GetOptionsByCodeSearch(
-            string code, short year, byte eduLevel, byte course, byte semester)
-        {
-            byte courseMask = (byte)(1 << (course - 1));
+    public async Task<object> GetDisciplinesPrintInfo(uint facultyId, CatalogTypes catalogType, short eduYear, Semesters semester)
+    {
+        var disciplines = await disciplineDtoRepository.GetOnSemester(facultyId, catalogType, eduYear, semester);
 
-            return await _disciplineDtoRepository.GetByCodeSearchWithoutClosed(code, year, eduLevel, courseMask, semester);
-        }
+        foreach (var discipline in disciplines)
+            discipline.ColorStatus = _disciplineStatusColors.GetColor(discipline.StudentsCount, _disciplineStatusThresholds);
 
-        public DisciplineStatusThresholds GetThresholds()
-        {
-            return _disciplineStatusThresholds;
-        }
+        return new { Thresholds = _disciplineStatusThresholds, Disciplines = disciplines };
+    }
 
-        public async Task<object> GetDisciplinesPrintInfo(uint facultyId, byte catalogType, short eduYear, byte semester)
-        {
-            var disciplines = await _disciplineDtoRepository.GetDisciplinesOnSemester(facultyId, catalogType, eduYear, semester);
+    public async Task<DisciplineFullInfoDto> AddDisciplineOrThrow(DisciplineRegistryDto discipline, string? userId)
+    {
+        if (userId is null) throw new BadRequestException("Неможливо виконати дію");
 
-            foreach (var discipline in disciplines)
-                discipline.ColorStatus = _disciplineStatusColors.GetColor(discipline.StudentsCount, _disciplineStatusThresholds);
+        discipline.DisciplineId = 0;
+        discipline.IsOpen = true;
 
-            return new { Thresholds = _disciplineStatusThresholds, Disciplines = disciplines };
-        }
+        var newDiscipline = DisciplineMapper.MapToDiscipline(discipline);
+        newDiscipline.CreatorId = UlidIdParser.ParseId(userId);
 
-        public async Task<DisciplineFullInfoDto> AddDiscipline(DisciplineRegistryDto discipline, string userId)
-        {
-            discipline.DisciplineId = 0;
-            discipline.IsOpen = true;
+        var addedDiscipline = await disciplineRepository.Add(newDiscipline);
 
-            var newDiscipline = DisciplineMapper.MapToDiscipline(discipline);
-            newDiscipline.CreatorId = Ulid.Parse(userId).ToByteArray();
+        return DisciplineMapper.MapToDisciplineFullInfoDto(addedDiscipline);
+    }
 
-            var addedDiscipline = await _disciplineRepository.Add(newDiscipline);
+    public async Task<DisciplineFullInfoDto> UpdateOrThrow(DisciplineRegistryDto discipline)
+    {
+        if (discipline.DisciplineId == 0) throw new BadRequestException("Невалідні дані");
 
-            return DisciplineMapper.MapToDisciplineFullInfoDto(addedDiscipline);
-        }
+        var updatedDiscipline = await disciplineRepository.Update(DisciplineMapper.MapToDiscipline(discipline)) ??
+            throw new NotFoundException("Дисципліну не знайдено");
 
-        public async Task<DisciplineFullInfoDto?> UpdateDiscipline(DisciplineRegistryDto discipline)
-        {
-            var updatedDiscipline = await _disciplineRepository.Update(DisciplineMapper.MapToDiscipline(discipline));
+        return DisciplineMapper.MapToDisciplineFullInfoDto(updatedDiscipline);
+    }
 
-            if (updatedDiscipline is null)
-                return null;
+    public async Task DeleteOrThrow(uint disciplineId)
+    {
+        var result = await disciplineRepository.Delete(disciplineId, _disciplineStatusThresholds.NotEnough);
 
-            return DisciplineMapper.MapToDisciplineFullInfoDto(updatedDiscipline);
-        }
+        result.ThrowIfFailed("Дисципліну не знайдено", "Дисципліна як мінумум умовно набрана");
+    }
 
-        public async Task<bool?> DeleteDiscipline(uint disciplineId)
-        {
-            return await _disciplineRepository.Delete(disciplineId);
-        }
+    public async Task UpdateStatusOrThrow(uint disciplineId)
+    {
+        var isSuccess = await disciplineRepository.UpdateStatus(disciplineId);
 
-        public async Task<bool> UpdateStatus(uint disciplineId)
-        {
-            return await _disciplineRepository.UpdateStatus(disciplineId);
-        }
-
-        private byte[]? GetWorkerIdAsByteArray(string? workerId)
-        {
-            if (workerId is null)
-                return null;
-
-            var isSuccess = Ulid.TryParse(workerId, out Ulid ulidWorkerId);
-
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний Id");
-
-            return ulidWorkerId.ToByteArray();
-        }
+        if (!isSuccess) throw new NotFoundException("Дисципліну не знайдено");
     }
 }

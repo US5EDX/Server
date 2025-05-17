@@ -1,16 +1,16 @@
-﻿using Server.Models.Models;
+﻿using Server.Models.Enums;
+using Server.Models.Models;
 
-namespace Server.Models.Interfaces
+namespace Server.Models.Interfaces;
+
+public interface IHoldingRepository
 {
-    public interface IHoldingRepository
-    {
-        Task<Holding> Add(Holding holding);
-        Task<bool?> Delete(short eduYear);
-        Task<IEnumerable<Holding>> GetAll();
-        Task<IEnumerable<short>> GetLastNYears(int limit);
-        Task<short> GetLastAsync();
-        Task<Holding> GetLastWithDates();
-        Task<IEnumerable<short>> GetYearsBySet(HashSet<int> requestedYears);
-        Task<Holding?> Update(Holding holding);
-    }
+    Task<IReadOnlyList<Holding>> GetAll();
+    Task<IReadOnlyList<short>> GetLastNYears(int limit);
+    Task<short> GetLastYearAsync();
+    Task<Holding> GetLast();
+    Task<IReadOnlyList<short>> GetRequestedYears(HashSet<int> requestedYears);
+    Task<Holding> Add(Holding holding);
+    Task<Holding?> Update(Holding holding);
+    Task<DeleteResultEnum> Delete(short eduYear);
 }

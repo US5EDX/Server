@@ -1,98 +1,65 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Server.Data.DbContexts;
+using Server.Models.Enums;
 using Server.Models.Interfaces;
 using Server.Models.Models;
 
-namespace Server.Data.Repositories
+namespace Server.Data.Repositories;
+
+public class HoldingRepository(ElCoursesDbContext context) : IHoldingRepository
 {
-    public class HoldingRepository : IHoldingRepository
+    private readonly ElCoursesDbContext _context = context;
+
+    public async Task<IReadOnlyList<Holding>> GetAll() => await _context.Holdings.ToListAsync();
+
+    public async Task<short> GetLastYearAsync() =>
+        await _context.Holdings.OrderByDescending(h => h.EduYear).Select(h => h.EduYear).FirstAsync();
+
+    public async Task<IReadOnlyList<short>> GetLastNYears(int limit) =>
+        await _context.Holdings.OrderByDescending(h => h.EduYear).Take(limit).Select(h => h.EduYear).ToListAsync();
+
+    public async Task<Holding> GetLast() =>
+        await _context.Holdings.OrderByDescending(h => h.EduYear).FirstAsync();
+
+    public async Task<IReadOnlyList<short>> GetRequestedYears(HashSet<int> requestedYears) =>
+        await _context.Holdings.Where(h => requestedYears.Contains(h.EduYear)).Select(h => h.EduYear).ToListAsync();
+
+    public async Task<Holding> Add(Holding holding)
     {
-        private readonly ElCoursesDbContext _context;
+        await _context.Holdings.AddAsync(holding);
+        await _context.SaveChangesAsync();
 
-        public HoldingRepository(ElCoursesDbContext context)
-        {
-            _context = context;
-        }
+        return holding;
+    }
 
-        public async Task<IEnumerable<Holding>> GetAll()
-        {
-            return await _context.Holdings.ToListAsync();
-        }
+    public async Task<Holding?> Update(Holding holding)
+    {
+        var existingHolding = await _context.Holdings.SingleOrDefaultAsync(h => h.EduYear == holding.EduYear);
 
-        public async Task<IEnumerable<short>> GetLastNYears(int limit)
-        {
-            return await _context.Holdings
-                .OrderByDescending(h => h.EduYear)
-                .Take(limit)
-                .Select(h => h.EduYear)
-                .ToListAsync();
-        }
+        if (existingHolding is null) return null;
 
-        public async Task<short> GetLastAsync()
-        {
-            var record = await _context.Holdings
-                .OrderByDescending(h => h.EduYear)
-                .FirstAsync();
+        existingHolding.StartDate = holding.StartDate;
+        existingHolding.EndDate = holding.EndDate;
+        await _context.SaveChangesAsync();
 
-            return record.EduYear;
-        }
+        return existingHolding;
+    }
 
-        public async Task<Holding> GetLastWithDates()
-        {
-            return await _context.Holdings.OrderByDescending(h => h.EduYear)
-                 .FirstAsync();
-        }
+    public async Task<DeleteResultEnum> Delete(short eduYear)
+    {
+        bool hasDependencies = await _context.Holdings
+                .Where(h => h.EduYear == eduYear)
+                .AnyAsync(h => h.Disciplines.Any() || h.Records.Any());
 
-        public async Task<IEnumerable<short>> GetYearsBySet(HashSet<int> requestedYears)
-        {
-            return await _context.Holdings
-                .Where(h => requestedYears.Contains(h.EduYear))
-                .Select(h => h.EduYear)
-                .ToListAsync();
-        }
+        if (hasDependencies) return DeleteResultEnum.HasDependencies;
 
-        public async Task<Holding> Add(Holding holding)
-        {
-            await _context.Holdings.AddAsync(holding);
-            await _context.SaveChangesAsync();
+        var existingHolding = await _context.Holdings.SingleOrDefaultAsync(h => h.EduYear == eduYear);
 
-            return holding;
-        }
+        if (existingHolding is null) return DeleteResultEnum.ValueNotFound;
 
-        public async Task<Holding?> Update(Holding holding)
-        {
-            var existingHolding = await _context.Holdings.FirstOrDefaultAsync(h => h.EduYear == holding.EduYear);
+        _context.Holdings.Remove(existingHolding);
+        await _context.SaveChangesAsync();
 
-            if (existingHolding is null)
-                return null;
-
-            existingHolding.StartDate = holding.StartDate;
-            existingHolding.EndDate = holding.EndDate;
-            await _context.SaveChangesAsync();
-
-            return existingHolding;
-        }
-
-        public async Task<bool?> Delete(short eduYear)
-        {
-            bool hasDependencies = await _context.Holdings
-                    .Where(h => h.EduYear == eduYear)
-                    .AnyAsync(h =>
-                        h.Disciplines.Any() ||
-                        h.Records.Any());
-
-            if (hasDependencies)
-                return null;
-
-            var existingHolding = await _context.Holdings.FirstOrDefaultAsync(h => h.EduYear == eduYear);
-
-            if (existingHolding is null)
-                return false;
-
-            _context.Holdings.Remove(existingHolding);
-            await _context.SaveChangesAsync();
-
-            return true;
-        }
+        return DeleteResultEnum.Success;
     }
 }

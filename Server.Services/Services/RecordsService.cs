@@ -1,183 +1,147 @@
-﻿using Server.Models.Interfaces;
+﻿using Server.Models.CustomExceptions;
+using Server.Models.Enums;
+using Server.Models.Interfaces;
+using Server.Services.Converters;
 using Server.Services.DtoInterfaces;
-using Server.Services.Dtos;
+using Server.Services.Dtos.RecordDtos;
+using Server.Services.Dtos.StudentDtos;
 using Server.Services.Mappings;
+using Server.Services.Parsers;
+using Server.Services.Services.StaticServices;
 
-namespace Server.Services.Services
+namespace Server.Services.Services;
+
+public class RecordsService(IRecordRepository recordRepository, IRecordDtoRepository recordDtoRepository,
+    IHoldingRepository holdingRepository, IGroupRepository groupRepository)
 {
-    public class RecordsService
+    public async Task<IReadOnlyList<RecordWithStudentInfoDto>> GetSignedStudents(uint disciplineId, Semesters semester) =>
+        await recordDtoRepository.GetRecordsWithStudentInfo(disciplineId, semester);
+
+    public async Task<IReadOnlyList<RecordWithDisciplineInfoDto>> GetRecordsByStudentIdAndYear(string studentId, short year)
     {
-        private readonly IRecordRepository _recordRepository;
-        private readonly IRecordDtoRepository _recordDtoRepository;
-        private readonly IHoldingRepository _holdingRepository;
-        private readonly IGroupRepository _groupRepository;
+        var byteStudentId = UlidIdParser.ParseId(studentId);
+        return await recordDtoRepository.GetByStudentIdAndYear(byteStudentId, year);
+    }
 
-        private readonly TimeZoneInfo _kiyvTimeZone;
+    public async Task<IReadOnlyList<RecordShortDisciplineInfoDto>> GetWithDisciplineShort(string? studentId, short year)
+    {
+        if (studentId is null) throw new BadRequestException("Невалідний Id");
 
-        public RecordsService(IRecordRepository recordRepository, IRecordDtoRepository recordDtoRepository,
-            IHoldingRepository holdingRepository, IGroupRepository groupRepository)
+        var byteStudentId = UlidIdParser.ParseId(studentId);
+        return await recordDtoRepository.GetWithDisciplineShort(byteStudentId, year);
+    }
+
+    public async Task<IReadOnlyList<StudentYearsRecordsDto>> GetMadeChoices(string? studentId)
+    {
+        if (studentId is null) throw new BadRequestException("Невалідний Id");
+
+        var byteStudentId = UlidIdParser.ParseId(studentId);
+
+        return await recordDtoRepository.GetMadeChoices(byteStudentId);
+    }
+
+    public async Task<IEnumerable<StudentYearRecordsDto>> GetByStudentAndGroupIdOrThrow(string studentId, uint groupId)
+    {
+        var byteStudentId = UlidIdParser.ParseId(studentId);
+
+        var groupInfo = await groupRepository.GetById(groupId) ?? throw new NotFoundException("Групу не знайдено");
+
+        var firstVisibleYear = groupInfo.HasEnterChoise ? groupInfo.AdmissionYear : groupInfo.AdmissionYear + 1;
+        var lastVisibleYear = CalcuationService.CalculateLastHoldingForGroup(groupInfo);
+
+        if (lastVisibleYear < firstVisibleYear) return [];
+
+        var yearsRange = Enumerable.Range(firstVisibleYear, lastVisibleYear - firstVisibleYear + 1).ToHashSet();
+        var years = await holdingRepository.GetRequestedYears(yearsRange);
+
+        var records = await recordDtoRepository.GetStudentRecordsByYears(byteStudentId, years);
+
+        var groupedRecords = records.GroupBy(r => r.Holding).ToDictionary(pair => pair.Key, pair => pair.ToList());
+
+        foreach (var year in years) groupedRecords.TryAdd(year, []);
+
+        return groupedRecords.OrderByDescending(gr => gr.Key).Select(pair =>
         {
-            _recordRepository = recordRepository;
-            _recordDtoRepository = recordDtoRepository;
-            _holdingRepository = holdingRepository;
-            _groupRepository = groupRepository;
+            var semesterGroups = pair.Value.GroupBy(r => r.Semester)
+            .ToDictionary(g => g.Key, g => g.Select(RecordMapper.MapToPairDto).ToList());
 
-            _kiyvTimeZone = TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time");
-        }
-
-        public async Task<IEnumerable<RecordWithStudentInfoDto>> GetSignedStudents(uint disciplineId, byte semester)
-        {
-            var records = await _recordRepository.GetRecordsWithStudentInfo(disciplineId, semester);
-
-            return records.Select(RecordMapper.MapToRecordWithStudentInfo);
-        }
-
-        public async Task<IEnumerable<StudentYearRecordsDto>> GetByStudentIdAndGroupId(string studentId, uint groupId)
-        {
-            var isSuccess = Ulid.TryParse(studentId, out Ulid ulidStudentId);
-
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний Id");
-
-            var byteStudentId = ulidStudentId.ToByteArray();
-
-            var groupInfo = await _groupRepository.GetById(groupId);
-
-            if (groupInfo == null)
-                throw new Exception("Групу не знайдено");
-
-            var lastVisibleYear = CalcuationService.CalculateLastHoldingForGroup(groupInfo);
-
-            var firstVisibleYear = groupInfo.HasEnterChoise ? groupInfo.AdmissionYear : groupInfo.AdmissionYear + 1;
-
-            if (lastVisibleYear < firstVisibleYear)
-                return Enumerable.Empty<StudentYearRecordsDto>();
-
-            var yearsRange = new HashSet<int>(
-                Enumerable.Range(firstVisibleYear, lastVisibleYear - firstVisibleYear + 1));
-
-            var years = (await _holdingRepository.GetYearsBySet(yearsRange)).ToHashSet();
-
-            var records = await _recordDtoRepository.GetStudentRecordsByYears(byteStudentId, years);
-
-            var groupedRecords = records.GroupBy(r => r.Holding).ToDictionary(pair => pair.Key, pair => pair.ToList());
-
-            foreach (var year in years)
-                groupedRecords.TryAdd(year, new List<StudentYearsRecordsDto>(0));
-
-            return groupedRecords.OrderByDescending(gr => gr.Key).Select(pair =>
+            return new StudentYearRecordsDto
             {
-                var semesterGroups = pair.Value.GroupBy(r => r.Semester)
-                .ToDictionary(g => g.Key, g => g.Select(RecordMapper.MapToPairDto).ToList());
+                EduYear = pair.Key,
+                Nonparsemester = semesterGroups.GetValueOrDefault(Semesters.Fall, []),
+                Parsemester = semesterGroups.GetValueOrDefault(Semesters.Spring, [])
+            };
+        });
+    }
 
-                return new StudentYearRecordsDto
-                {
-                    EduYear = pair.Key,
-                    Nonparsemester = semesterGroups.GetValueOrDefault<byte, List<RecordDiscAndStatusPairDto>>
-                    (1, new List<RecordDiscAndStatusPairDto>(0)),
-                    Parsemester = semesterGroups.GetValueOrDefault<byte, List<RecordDiscAndStatusPairDto>>
-                    (2, new List<RecordDiscAndStatusPairDto>(0))
-                };
-            });
-        }
+    public async Task<RecordWithDisciplineInfoDto> AddRecord(RecordRegistryDto record)
+    {
+        record.RecordId = 0;
 
-        public async Task<IEnumerable<RecordWithDisciplineInfoDto>> GetRecordsByStudentIdAndYear(string studentId, short year)
-        {
-            var isSuccess = Ulid.TryParse(studentId, out Ulid ulidStudentId);
+        var newRecordId = await recordRepository.Add(RecordMapper.MapToRecord(record));
 
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний Id");
+        return await recordDtoRepository.GetWithDisciplineById(newRecordId) ??
+            throw new NotFoundException("Не вдалось знайти додану дисципліну");
+    }
 
-            var byteStudentId = ulidStudentId.ToByteArray();
+    public async Task<RecordWithDisciplineInfoDto> UpdateOrThrow(RecordRegistryDto record)
+    {
+        if (record.RecordId is null) throw new BadRequestException("Невалідні дані");
 
-            return await _recordDtoRepository.GetByStudentIdAndYear(byteStudentId, year);
-        }
+        var updatedRecordId = await recordRepository.Update(RecordMapper.MapToRecord(record)) ??
+            throw new NotFoundException("Вказаний запис не знайдена");
 
-        public async Task<IEnumerable<RecordShortDisciplineInfoDto>> GetWithDisciplineShort(string studentId, short year)
-        {
-            var isSuccess = Ulid.TryParse(studentId, out Ulid ulidStudentId);
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний Id");
-            var byteStudentId = ulidStudentId.ToByteArray();
-            return await _recordDtoRepository.GetWithDisciplineShort(byteStudentId, year);
-        }
+        return await recordDtoRepository.GetWithDisciplineById(updatedRecordId) ??
+            throw new NotFoundException("Не вдалось знайти оновлену дисципліну");
+    }
 
-        public async Task<IEnumerable<StudentYearsRecordsDto>> GetMadeChoices(string studentId)
-        {
-            var isSuccess = Ulid.TryParse(studentId, out Ulid ulidStudentId);
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний Id");
+    public async Task DeleteOrThrow(uint recordId)
+    {
+        var result = await recordRepository.Delete(recordId);
 
-            var byteStudentId = ulidStudentId.ToByteArray();
-            return await _recordDtoRepository.GetMadeChoices(byteStudentId);
-        }
+        result.ThrowIfFailed("Вказаний запис не знайдено", "Неможливо видалити, оскільки запис не є відхиленим");
+    }
 
-        public async Task<RecordWithDisciplineInfoDto> AddRecord(RecordRegistryDto record)
-        {
-            var newRecordId = await _recordRepository.Add(RecordMapper.MapToRecord(record));
+    public async Task UpdateStatusOrThrow(uint recordId, RecordStatus status)
+    {
+        var isSuccess = await recordRepository.UpdateStatus(recordId, status);
 
-            return await _recordDtoRepository.GetWithDisciplineById(newRecordId);
-        }
+        if (!isSuccess) throw new NotFoundException("Запис не знайдено");
+    }
 
-        public async Task<RecordWithDisciplineInfoDto?> UpdateRecord(RecordRegistryDto record)
-        {
-            var updatedRecordId = await _recordRepository.Update(RecordMapper.MapToRecord(record));
+    public async Task<uint> RegisterRecordOrThrow(RecordRegistryWithoutStudent inRecord, string? studentId)
+    {
+        if (studentId is null) throw new BadRequestException("Невалідний Id");
 
-            if (updatedRecordId is null)
-                return null;
+        var byteStudentId = UlidIdParser.ParseId(studentId);
 
-            return await _recordDtoRepository.GetWithDisciplineById(updatedRecordId.Value);
-        }
+        var kiyvDate = KiyvDateTimeConverter.ConvertUtcToKyivDate(DateTime.UtcNow);
 
-        public async Task<bool?> DeleteRecord(uint recordId)
-        {
-            return await _recordRepository.Delete(recordId);
-        }
+        var holding = await holdingRepository.GetLast();
 
-        public async Task<bool> UpdateStatus(uint recordId, byte status)
-        {
-            return await _recordRepository.UpdateStatus(recordId, status);
-        }
+        if (holding is null || holding.StartDate > kiyvDate || holding.EndDate < kiyvDate || inRecord.Holding != holding.EduYear)
+            throw new BadRequestException("Вибір недоступний");
 
-        public async Task<uint> RegisterRecord(RecordRegistryWithoutStudent inRecord, string studentId)
-        {
-            var kiyvDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTime.UtcNow, _kiyvTimeZone));
+        var groupInfo = await groupRepository.GetGroupInfoByStudentId(byteStudentId) ??
+            throw new BadRequestException("Проблеми з ідентифікатором користувача");
 
-            var holding = await _holdingRepository.GetLastWithDates();
+        var course = CalcuationService.CalculateGroupCourse(groupInfo);
 
-            if (holding is null || holding.StartDate > kiyvDate || holding.EndDate < kiyvDate ||
-                inRecord.Holding != holding.EduYear)
-                throw new InvalidOperationException("Вибір недоступний");
+        if (course == 0 || course == groupInfo.DurationOfStudy ||
+            (holding.EduYear == groupInfo.AdmissionYear && !groupInfo.HasEnterChoise))
+            throw new BadRequestException("Вибір для вас не запланований");
 
-            if (!Ulid.TryParse(studentId, out Ulid ulidStudentId))
-                throw new InvalidCastException("Невалідний Id");
+        course += groupInfo.ChoiceDifference;
 
-            var byteStudentId = ulidStudentId.ToByteArray();
+        byte courseMask = CourseToCourseMaskConverter.ConvertToAdjustedCourseMask(course, groupInfo.HasEnterChoise);
 
-            var groupInfo = await _groupRepository.GetGroupInfoByStudentId(byteStudentId);
+        var record = RecordMapper.MapToRecord(inRecord);
 
-            if (groupInfo is null)
-                throw new Exception("Проблеми з id");
+        record.StudentId = byteStudentId;
 
-            var course = CalcuationService.CalculateGroupCourse(groupInfo);
-
-            if (course == 0 || course == groupInfo.DurationOfStudy ||
-                (holding.EduYear == groupInfo.AdmissionYear && !groupInfo.HasEnterChoise))
-                throw new Exception("Вибір для вас не запланований");
-
-            course += groupInfo.ChoiceDifference;
-
-            byte courseMask = (byte)(1 << (course - ((course == 1 && groupInfo.HasEnterChoise) ? 1 : 0)));
-
-            var record = RecordMapper.MapToRecord(inRecord);
-
-            record.StudentId = byteStudentId;
-
-            var res = record.RecordId == 0 ? await _recordRepository.AddRecord(record, groupInfo.EduLevel, courseMask,
-                inRecord.Semester == 1 ? groupInfo.Nonparsemester : groupInfo.Parsemester) :
-                await _recordRepository.UpdateRecord(record, groupInfo.EduLevel, courseMask);
-
-            return res;
-        }
+        return record.RecordId == 0 ?
+            await recordRepository.AddRecordOrThrow(record, groupInfo.EduLevel, courseMask, inRecord.Semester == Semesters.Fall ?
+            groupInfo.Nonparsemester : groupInfo.Parsemester) :
+            await recordRepository.UpdateRecordOrThrow(record, groupInfo.EduLevel, courseMask);
     }
 }

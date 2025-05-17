@@ -1,54 +1,47 @@
-﻿using Server.Models.Interfaces;
+﻿using Server.Models.CustomExceptions;
+using Server.Models.Enums;
+using Server.Models.Interfaces;
 using Server.Services.Dtos;
 using Server.Services.Mappings;
 
 namespace Server.Services.Services
 {
-    public class HoldingsService
+    public class HoldingsService(IHoldingRepository holdingRepository)
     {
-        private readonly IHoldingRepository _holdingRepository;
-
-        public HoldingsService(IHoldingRepository holdingRepository)
-        {
-            _holdingRepository = holdingRepository;
-        }
-
         public async Task<IEnumerable<HoldingDto>> GetAll()
         {
-            var holdings = await _holdingRepository.GetAll();
+            var holdings = await holdingRepository.GetAll();
             return holdings.Select(HoldingMapper.MapToHoldingDto);
         }
 
-        public async Task<IEnumerable<short>> GetLastFive()
-        {
-            return await _holdingRepository.GetLastNYears(5);
-        }
+        public async Task<IReadOnlyList<short>> GetLastFive() => await holdingRepository.GetLastNYears(5);
 
         public async Task<HoldingDto> GetLast()
         {
-            var lastHolding = await _holdingRepository.GetLastWithDates();
+            var lastHolding = await holdingRepository.GetLast();
             return HoldingMapper.MapToHoldingDto(lastHolding);
         }
 
         public async Task<HoldingDto> AddHolding(HoldingDto holding)
         {
-            var newHolding = await _holdingRepository.Add(HoldingMapper.MapToHolding(holding));
+            var newHolding = await holdingRepository.Add(HoldingMapper.MapToHolding(holding));
             return HoldingMapper.MapToHoldingDto(newHolding);
         }
 
-        public async Task<HoldingDto?> UpdateHolding(HoldingDto holding)
+        public async Task<HoldingDto> UpdateOrThrow(HoldingDto holding)
         {
-            var updatedHolding = await _holdingRepository.Update(HoldingMapper.MapToHolding(holding));
-
-            if (updatedHolding is null)
-                return null;
+            var updatedHolding = await holdingRepository.Update(HoldingMapper.MapToHolding(holding)) ??
+                throw new NotFoundException("Спеціальність не знайдено");
 
             return HoldingMapper.MapToHoldingDto(updatedHolding);
         }
 
-        public async Task<bool?> DeleteHolding(short eduYear)
+        public async Task DeleteOrThrow(short eduYear)
         {
-            return await _holdingRepository.Delete(eduYear);
+            var result = await holdingRepository.Delete(eduYear);
+
+            result.ThrowIfFailed("Вказаний навчальний рік не знайдено",
+                "Неможливо видалити, оскільки до навчального року є прив'язані дані");
         }
     }
 }

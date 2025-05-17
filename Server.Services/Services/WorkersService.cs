@@ -1,112 +1,86 @@
-﻿using Server.Models.Interfaces;
+﻿using Server.Models.CustomExceptions;
+using Server.Models.Enums;
+using Server.Models.Interfaces;
+using Server.Models.Interfaces.ExternalInterfaces;
 using Server.Services.DtoInterfaces;
-using Server.Services.Dtos;
+using Server.Services.Dtos.UserDtos;
+using Server.Services.Dtos.WorkerDtos;
 using Server.Services.Mappings;
+using Server.Services.Parsers;
+using Server.Services.Services.StaticServices;
 
-namespace Server.Services.Services
+namespace Server.Services.Services;
+
+public class WorkersService(IWorkerRepository workerRepository, IWorkerDtoRepository workerDtoRepository,
+    IEmailService emailService)
 {
-    public class WorkersService
+    public async Task<int> GetCount(uint? facultyFilter) => facultyFilter is null ?
+        await workerRepository.GetCount() : await workerRepository.GetCount(facultyFilter.Value);
+
+    public async Task<IEnumerable<UserFullInfoDto>> GetWorkers(int pageNumber, int pageSize, uint? facultyFilter)
     {
-        private readonly IWorkerRepository _workerRepository;
-        private readonly IWorkerDtoRepository _workerDtoRepository;
-        private readonly IEmailService _emailService;
+        var workers = facultyFilter is null ? await workerRepository.GetWorkers(pageNumber, pageSize) :
+            await workerRepository.GetWorkers(pageNumber, pageSize, facultyFilter.Value);
 
-        public WorkersService(IWorkerRepository workerRepository, IWorkerDtoRepository workerDtoRepository,
-            IEmailService emailService)
-        {
-            _workerRepository = workerRepository;
-            _workerDtoRepository = workerDtoRepository;
-            _emailService = emailService;
-        }
+        return workers.Select(UserMapper.MapToUserFullInfoDto);
+    }
 
-        public async Task<int> GetCount(uint? facultyFilter)
-        {
-            var workersCount = facultyFilter is null ? await _workerRepository.GetCount() :
-                await _workerRepository.GetCount(facultyFilter.Value);
+    public async Task<IReadOnlyList<WorkerShortInfoDto>> GetByFacultyAndFullName(uint faculty, string fullName) =>
+        await workerDtoRepository.GetByFacultyAndFullName(faculty, fullName);
 
-            return workersCount;
-        }
+    public async Task<UserFullInfoDto> AddWorker(WorkerRegistryDto worker, string? requestUserRole)
+    {
+        if (worker.Role <= RoleParser.Parse(requestUserRole)) throw new ForbidException("Неможливо виконати дію");
 
-        public async Task<IEnumerable<UserFullInfoDto>> GetWorkers(int pageNumber, int pageSize, uint? facultyFilter)
-        {
-            var workers = facultyFilter is null ? await _workerRepository.GetWorkers(pageNumber, pageSize) :
-                await _workerRepository.GetWorkers(pageNumber, pageSize, facultyFilter.Value);
+        var user = UserMapper.MapToUserFromWorkerWithoutId(worker);
 
-            return workers.Select(UserMapper.MapToUserFullInfoDto);
-        }
+        var id = GeneratorService.GenerateByteUlid();
 
-        public async Task<IEnumerable<WorkerShortInfoDto>> GetByFacultyAndFullName(uint faculty, string fullName)
-        {
-            return await _workerDtoRepository.GetByFacultyAndFullName(faculty, fullName);
-        }
+        user.UserId = id;
+        user.Worker.WorkerId = id;
 
-        public async Task<UserFullInfoDto> AddWorker(UserFullInfoDto worker)
-        {
-            var user = UserMapper.MapToUserFromWorkerWithoutId(worker);
+        var salt = GeneratorService.GenerateSalt();
+        var password = GeneratorService.GeneratePassword();
+        var passwordHash = HasherService.GetPBKDF2Hash(password, salt);
 
-            Ulid ulid = Ulid.NewUlid();
+        user.Salt = salt;
+        user.Password = passwordHash;
 
-            user.UserId = ulid.ToByteArray();
-            user.Worker.WorkerId = ulid.ToByteArray();
+        var newWorker = await workerRepository.Add(user);
 
-            var salt = GeneratorService.GenerateSalt();
+        var body = GeneratorService.GenerateRegistrationEmailBody(user.Email, password);
+        await emailService.SendEmailAsync(user.Email, "Реєстрація у системі проведення вибору дисциплін", body);
 
-            //For development purposes
+        return UserMapper.MapToUserFullInfoDto(newWorker);
+    }
 
-            var password = "Test1234";
-            //var password = GeneratorService.GeneratePassword();
+    public async Task<UserFullInfoDto> UpdateOrThrow(WorkerRegistryDto worker, string? requestUserRole)
+    {
+        if (worker.WorkerId is null) throw new BadRequestException("Невалідні вхідні дані");
 
-            var passwordHash = HasherService.GetPBKDF2Hash(password, salt);
+        if (worker.Role <= RoleParser.Parse(requestUserRole)) throw new ForbidException("Неможливо виконати дію");
 
-            user.Salt = salt;
-            user.Password = passwordHash;
+        var user = UserMapper.MapToUserFromWorkerWithoutId(worker);
 
-            var newWorker = await _workerRepository.Add(user);
+        var byteWorkerId = UlidIdParser.ParseId(worker.WorkerId);
 
-            //While developmnet
+        user.UserId = byteWorkerId;
+        user.Worker.WorkerId = byteWorkerId;
 
-            //await _emailService.SendEmailAsync(user.Email, "Реєстрація у системі проведення вибору дисциплін",
-            //    "Доброго дня!\n" +
-            //    "Не забудьте після входу змінити тимчасовий пароль,\n" +
-            //    "і надійно його зберігайте.\n" +
-            //    $"Ваш логін для входу: {user.Email}\n" +
-            //    $"Тимчасовий пароль: {password}\n" +
-            //    "Вхід через:\n" +
-            //    "\n\nЗ повагою, ДНУ.");
+        var updatedWorker = await workerRepository.Update(user) ??
+            throw new NotFoundException("Вказаного користувача не знайдено");
 
-            return UserMapper.MapToUserFullInfoDto(newWorker);
-        }
+        return UserMapper.MapToUserFullInfoDto(updatedWorker);
+    }
 
-        public async Task<UserFullInfoDto?> UpdateWorker(UserFullInfoDto worker)
-        {
-            var user = UserMapper.MapToUserFromWorkerWithoutId(worker);
+    public async Task DeleteOrThrow(string workerId, string? requestUserRole)
+    {
+        var byteWorkerId = UlidIdParser.ParseId(workerId);
 
-            var isSuccess = Ulid.TryParse(worker.Id, out Ulid ulidWorkerId);
+        var result = await workerRepository.Delete(byteWorkerId, RoleParser.Parse(requestUserRole),
+            (short)(DateTime.Today.Year - 1));
 
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний Id");
-
-            var byteWorkerId = ulidWorkerId.ToByteArray();
-
-            user.UserId = byteWorkerId;
-            user.Worker.WorkerId = byteWorkerId;
-
-            var updatedWorker = await _workerRepository.Update(user);
-
-            if (updatedWorker is null)
-                return null;
-
-            return UserMapper.MapToUserFullInfoDto(updatedWorker);
-        }
-
-        public async Task<bool?> DeleteWorker(string workerId, int requestUserId)
-        {
-            var isSuccess = Ulid.TryParse(workerId, out Ulid ulidWorkerId);
-
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний Id");
-
-            return await _workerRepository.Delete(ulidWorkerId.ToByteArray(), requestUserId);
-        }
+        result.ThrowIfFailed("Вказаного співобітника не знайдено або недостатній рівень доступу",
+            "Неможливо видалити, оскільки до співробітника є прив'язані дані");
     }
 }

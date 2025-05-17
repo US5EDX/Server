@@ -1,65 +1,53 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Server.Data.DbContexts;
+using Server.Models.Enums;
 using Server.Models.Interfaces;
 using Server.Models.Models;
 
-namespace Server.Data.Repositories
+namespace Server.Data.Repositories;
+
+public class SpecialtyRepository(ElCoursesDbContext context) : ISpecialtyRepository
 {
-    public class SpecialtyRepository : ISpecialtyRepository
+    private readonly ElCoursesDbContext _context = context;
+
+    public async Task<IReadOnlyList<Specialty>> GetByFacultyId(uint facultyId) =>
+        await _context.Specialties.Where(f => f.FacultyId == facultyId).ToListAsync();
+
+    public async Task<Specialty> Add(Specialty specialty)
     {
-        private readonly ElCoursesDbContext _context;
+        await _context.Specialties.AddAsync(specialty);
+        await _context.SaveChangesAsync();
 
-        public SpecialtyRepository(ElCoursesDbContext context)
-        {
-            _context = context;
-        }
+        return specialty;
+    }
 
-        public async Task<IEnumerable<Specialty>> GetByFacultyId(uint facultyId)
-        {
-            return await _context.Specialties.Where(f => f.FacultyId == facultyId).ToListAsync();
-        }
+    public async Task<Specialty?> Update(Specialty specialty)
+    {
+        var existingSpecialty = await _context.Specialties.SingleOrDefaultAsync(s => s.SpecialtyId == specialty.SpecialtyId);
 
-        public async Task<Specialty> Add(Specialty specialty)
-        {
-            await _context.Specialties.AddAsync(specialty);
-            await _context.SaveChangesAsync();
+        if (existingSpecialty is null) return null;
 
-            return specialty;
-        }
+        existingSpecialty.SpecialtyName = specialty.SpecialtyName;
+        await _context.SaveChangesAsync();
 
-        public async Task<Specialty?> Update(Specialty specialty)
-        {
-            var existingSpecialty = await _context.Specialties.FirstOrDefaultAsync(s => s.SpecialtyId == specialty.SpecialtyId);
+        return existingSpecialty;
+    }
 
-            if (existingSpecialty is null)
-                return null;
+    public async Task<DeleteResultEnum> DeleteAsync(uint specialtyId)
+    {
+        bool hasDependencies = await _context.Specialties
+                .Where(s => s.SpecialtyId == specialtyId)
+                .AnyAsync(s => s.Disciplines.Any() || s.Groups.Any());
 
-            existingSpecialty.SpecialtyName = specialty.SpecialtyName;
-            await _context.SaveChangesAsync();
+        if (hasDependencies) return DeleteResultEnum.HasDependencies;
 
-            return existingSpecialty;
-        }
+        var existingSpecialty = await _context.Specialties.SingleOrDefaultAsync(s => s.SpecialtyId == specialtyId);
 
-        public async Task<bool?> Delete(uint specialtyId)
-        {
-            bool hasDependencies = await _context.Specialties
-                    .Where(s => s.SpecialtyId == specialtyId)
-                    .AnyAsync(s =>
-                        s.Disciplines.Any() ||
-                        s.Groups.Any());
+        if (existingSpecialty is null) return DeleteResultEnum.ValueNotFound;
 
-            if (hasDependencies)
-                return null;
+        _context.Specialties.Remove(existingSpecialty);
+        await _context.SaveChangesAsync();
 
-            var existingSpecialty = await _context.Specialties.FirstOrDefaultAsync(s => s.SpecialtyId == specialtyId);
-
-            if (existingSpecialty is null)
-                return false;
-
-            _context.Specialties.Remove(existingSpecialty);
-            await _context.SaveChangesAsync();
-
-            return true;
-        }
+        return DeleteResultEnum.Success;
     }
 }

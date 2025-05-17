@@ -1,78 +1,50 @@
-﻿using Server.Models.Interfaces;
-using Server.Services.Dtos;
+﻿using Server.Models.CustomExceptions;
+using Server.Models.Interfaces;
+using Server.Models.Interfaces.ExternalInterfaces;
+using Server.Services.Dtos.UserDtos;
+using Server.Services.Parsers;
+using Server.Services.Services.StaticServices;
 
-namespace Server.Services.Services
+namespace Server.Services.Services;
+
+public class UsersService(IUserRepository userRepository, IEmailService emailService)
 {
-    public class UsersService
+    public async Task UpdatePasswordOrThrow(UpdatePasswordDto updatePassword, string? userId)
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IEmailService _emailService;
+        if (userId is null) throw new BadRequestException("Невалідні дані про користувача");
 
-        public UsersService(IUserRepository userRepository, IEmailService emailService)
-        {
-            _userRepository = userRepository;
-            _emailService = emailService;
-        }
+        var byteUserId = UlidIdParser.ParseId(userId);
+        var user = await userRepository.GetById(byteUserId) ??
+            throw new NotFoundException("Користувача не знайдено");
 
-        public async Task<bool?> UpdatePassword(UpdatePasswordDto updatePassword)
-        {
-            bool isSuccess = Ulid.TryParse(updatePassword.UserId, out Ulid userId);
+        if (!HasherService.VerifyPassword(updatePassword.OldPassword, user.Password, user.Salt))
+            throw new BadRequestException("Невірний старий пароль");
 
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний id користувача");
+        var salt = GeneratorService.GenerateSalt();
+        var password = HasherService.GetPBKDF2Hash(updatePassword.NewPassword, salt);
 
-            var user = await _userRepository.GetUserById(userId.ToByteArray());
+        await userRepository.UpdatePassword(user, password, salt);
+    }
 
-            if (user is null)
-                return null;
+    public async Task ResetPasswordOrThrow(string userId, string? requestUserRole)
+    {
+        var byteUserId = UlidIdParser.ParseId(userId);
 
-            if (!HasherService.VerifyPassword(updatePassword.OldPassword, user.Password, user.Salt))
-                return false;
+        var user = await userRepository.GetById(byteUserId) ??
+            throw new NotFoundException("Користувача не знайдено");
 
-            var salt = GeneratorService.GenerateSalt();
-            var password = HasherService.GetPBKDF2Hash(updatePassword.NewPassword, salt);
+        if (user.Role <= RoleParser.Parse(requestUserRole))
+            throw new ForbidException("Неможливо виконати дію");
 
-            await _userRepository.UpdatePassword(user, password, salt);
+        var salt = GeneratorService.GenerateSalt();
+        var password = GeneratorService.GeneratePassword();
+        var hashedPassword = HasherService.GetPBKDF2Hash(password, salt);
 
-            return true;
-        }
+        await userRepository.UpdatePassword(user, hashedPassword, salt);
 
-        public async Task<bool?> ResetPassword(string id, string requestUserRole)
-        {
-            bool isSuccess = Ulid.TryParse(id, out Ulid userId);
-
-            if (!isSuccess)
-                throw new InvalidCastException("Невалідний id користувача");
-
-            var user = await _userRepository.GetUserById(userId.ToByteArray());
-
-            if (user is null)
-                return false;
-
-            if (user.Role < int.Parse(requestUserRole))
-                return null;
-
-            var salt = GeneratorService.GenerateSalt();
-
-            //For development
-            //var password = GeneratorService.GeneratePassword();
-            var password = "Test1234";
-
-            var hashedPassword = HasherService.GetPBKDF2Hash(password, salt);
-
-            await _userRepository.UpdatePassword(user, hashedPassword, salt);
-
-            //While development
-
-            //await _emailService.SendEmailAsync(user.Email, "Ваш новий пароль",
-            //    "Доброго дня!\n" +
-            //    "Не забудьте після входу змінити тимчасовий пароль,\n" +
-            //    "і надійно його зберігайте.\n" +
-            //    $"Логін: {user.Email}\n" +
-            //    $"Тимчасовий пароль: {password}\n" +
-            //    "\n\nЗ повагою, адміністратор ДНУ.");
-
-            return true;
-        }
+        await emailService.SendEmailAsync(user.Email, "Ваш новий пароль",
+            "Доброго дня!\nНе забудьте після входу змінити тимчасовий пароль,\nі надійно його зберігайте.\n" +
+            $"Логін: {user.Email}\nТимчасовий пароль: {password}\n\n\n" +
+            "З повагою, адміністратор ДНУ.");
     }
 }
