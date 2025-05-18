@@ -1,4 +1,5 @@
 ﻿using Server.Models.Enums;
+using System.Text.Json.Serialization;
 
 namespace Server.Models.Models;
 
@@ -7,6 +8,7 @@ namespace Server.Models.Models;
 /// </summary>
 public partial class Record
 {
+    [JsonIgnore]
     public uint RecordId { get; set; }
 
     public byte[] StudentId { get; set; } = null!;
@@ -24,9 +26,12 @@ public partial class Record
 
     public RecordStatus Approved { get; set; }
 
+    [JsonIgnore]
     public virtual Discipline Discipline { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual Holding HoldingNavigation { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual Student Student { get; set; } = null!;
 }

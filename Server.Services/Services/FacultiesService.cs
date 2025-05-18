@@ -22,9 +22,9 @@ public class FacultiesService(IFacultyRepository facultyRepository)
 
     public async Task<FacultyDto> UpdateOrThrow(FacultyDto faculty)
     {
-        var updatedRows = await facultyRepository.Update(FacultyMapper.MapToFaculty(faculty));
+        var isSuccess = await facultyRepository.Update(FacultyMapper.MapToFaculty(faculty));
 
-        if (updatedRows == 0) throw new NotFoundException("Факультет не знайдено");
+        if (!isSuccess) throw new NotFoundException("Факультет не знайдено");
 
         return faculty;
     }

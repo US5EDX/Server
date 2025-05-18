@@ -1,4 +1,4 @@
-﻿namespace Server.Services.Dtos;
+﻿namespace Server.Services.Options.SettingsOptions;
 
 public class MailOptions
 {

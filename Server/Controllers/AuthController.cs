@@ -22,7 +22,6 @@ public class AuthController(AuthService authService) : ControllerBase
     public async Task<IActionResult> Resfresh([BindRequired][FromBody] string refreshToken) =>
         Ok(await authService.RefreshOrThrow(refreshToken, DateTime.UtcNow));
 
-    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([BindRequired][FromBody] string refreshToken)
     {

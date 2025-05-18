@@ -78,7 +78,7 @@ public class GroupRepository(ElCoursesDbContext context) : IGroupRepository
 
         bool hasDependencies = await _context.Groups
                 .Where(g => g.GroupId == groupId && g.DurationOfStudy >=
-                CalcuationService.CalculateStudyYear(g.AdmissionYear, 6, currDate)) // after june as current edu year
+                ((currDate.Month > 6 ? currDate.Year : currDate.Year - 1) - g.AdmissionYear + 1)) // after june as current edu year
                 .AnyAsync(g => g.Students.Any());
 
         if (hasDependencies) return DeleteResultEnum.HasDependencies;
@@ -102,7 +102,7 @@ public class GroupRepository(ElCoursesDbContext context) : IGroupRepository
         await using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
         var forDelete = await _context.Groups.Include(g => g.Specialty).Where(g => g.Specialty.FacultyId == facultyId &&
-        g.DurationOfStudy < CalcuationService.CalculateStudyYear(g.AdmissionYear, 6, currDate)).ToListAsync();
+        g.DurationOfStudy < ((currDate.Month > 6 ? currDate.Year : currDate.Year - 1) - g.AdmissionYear + 1)).ToListAsync();
 
         if (forDelete.Count == 0) return false;
 

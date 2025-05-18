@@ -7,6 +7,6 @@ public interface IFacultyRepository
 {
     Task<IReadOnlyList<Faculty>> GetAll();
     Task<Faculty> Add(Faculty faculty);
-    Task<int> Update(Faculty faculty);
+    Task<bool> Update(Faculty faculty);
     Task<DeleteResultEnum> Delete(uint facultyId);
 }

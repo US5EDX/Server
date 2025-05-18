@@ -20,9 +20,17 @@ public class FacultyRepository(ElCoursesDbContext context) : IFacultyRepository
         return faculty;
     }
 
-    public async Task<int> Update(Faculty faculty) =>
-        await _context.Faculties.Where(f => f.FacultyId == faculty.FacultyId)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(f => f.FacultyName, faculty.FacultyName));
+    public async Task<bool> Update(Faculty faculty)
+    {
+        var existingFaculty = await _context.Faculties.SingleOrDefaultAsync(f => f.FacultyId == faculty.FacultyId);
+
+        if (existingFaculty is null) return false;
+
+        existingFaculty.FacultyName = faculty.FacultyName;
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
 
     public async Task<DeleteResultEnum> Delete(uint facultyId)
     {

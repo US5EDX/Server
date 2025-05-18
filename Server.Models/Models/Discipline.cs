@@ -1,9 +1,11 @@
 ﻿using Server.Models.Enums;
+using System.Text.Json.Serialization;
 
 namespace Server.Models.Models;
 
 public partial class Discipline
 {
+    [JsonIgnore]
     public uint DisciplineId { get; set; }
 
     public string DisciplineCode { get; set; } = null!;
@@ -63,13 +65,18 @@ public partial class Discipline
 
     public byte[] CreatorId { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual Worker Creator { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual Faculty Faculty { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual Holding HoldingNavigation { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual ICollection<Record> Records { get; set; } = new List<Record>();
 
+    [JsonIgnore]
     public virtual Specialty? Specialty { get; set; }
 }

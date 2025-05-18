@@ -1,10 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage;
 using Server.Models.Models;
+using Server.Services.Converters;
+using Server.Services.Options.ContextOptions.RequestContext;
+using System.Text.Json;
 
 namespace Server.Data.DbContexts;
 
-public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> options) : DbContext(options)
+public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> options, IRequestContext requestContext) :
+    DbContext(options)
 {
+    public virtual DbSet<Auditlog> Auditlogs { get; set; }
+
     public virtual DbSet<Discipline> Disciplines { get; set; }
 
     public virtual DbSet<Faculty> Faculties { get; set; }
@@ -28,6 +36,24 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
         modelBuilder
             .UseCollation("utf8mb4_0900_ai_ci")
             .HasCharSet("utf8mb4");
+
+        modelBuilder.Entity<Auditlog>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("auditlogs");
+
+            entity.Property(e => e.ActionType).HasColumnType("enum('Insert','Update','Delete')");
+            entity.Property(e => e.Description).HasColumnType("text");
+            entity.Property(e => e.EntityId).HasMaxLength(36);
+            entity.Property(e => e.EntityName).HasMaxLength(50);
+            entity.Property(e => e.NewValue).HasColumnType("json");
+            entity.Property(e => e.OldValue).HasColumnType("json");
+            entity.Property(e => e.Timestamp)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UserId).HasMaxLength(26);
+        });
 
         modelBuilder.Entity<Discipline>(entity =>
         {
@@ -363,6 +389,127 @@ public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> opt
         });
 
         OnModelCreatingPartial(modelBuilder);
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        List<EntityEntry> entries = ChangeTracker.Entries()
+        .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted &&
+        e.Entity is not Auditlog).ToList();
+
+        List<EntityEntry> addedEntries = [];
+
+        foreach (var entry in entries)
+        {
+            if (entry.State is not EntityState.Modified && entry.Entity is User)
+                continue;
+
+            if (entry.State is EntityState.Added && entry.Properties.Any(p => p.Metadata.IsPrimaryKey() && p.IsTemporary))
+            {
+                addedEntries.Add(entry);
+                continue;
+            }
+
+            var auditLog = CreateLog(entry, entry.State);
+            Auditlogs.Add(auditLog);
+        }
+
+        if (addedEntries.Count == 0)
+            return await base.SaveChangesAsync(cancellationToken);
+
+        if (Database.CurrentTransaction is not null)
+            return await SaveChangesAndProccessAdded(addedEntries, cancellationToken);
+
+        await using var transaction = await Database.BeginTransactionAsync(cancellationToken);
+
+        return await SaveChangesAndProccessAdded(addedEntries, cancellationToken, transaction);
+    }
+
+    private async Task<int> SaveChangesAndProccessAdded(List<EntityEntry> added,
+        CancellationToken cancellationToken, IDbContextTransaction? transaction = null)
+    {
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        foreach (var entry in added)
+        {
+            var auditLog = CreateLog(entry, EntityState.Added);
+            Auditlogs.Add(auditLog);
+        }
+
+        await base.SaveChangesAsync(cancellationToken);
+
+        if (transaction is not null)
+            await transaction.CommitAsync(cancellationToken);
+
+        return result;
+    }
+
+    private Auditlog CreateLog(EntityEntry entityEntry, EntityState state)
+    {
+        var primaryKeyCurrentValue = entityEntry.Properties
+               .FirstOrDefault(p => p.Metadata.IsPrimaryKey() && !p.IsTemporary)?.CurrentValue;
+
+        var entityId = primaryKeyCurrentValue is not null && primaryKeyCurrentValue is byte[] userId ?
+            UlidConverter.ByteIdToString(userId) : primaryKeyCurrentValue?.ToString() ?? "Не визначено";
+
+        var log = new Auditlog()
+        {
+            UserId = requestContext.UserId ?? "Не ідентифіковано",
+            ActionType = state.ToString(),
+            EntityName = entityEntry.Entity.GetType().Name,
+            EntityId = entityId,
+            Timestamp = DateTime.UtcNow,
+            NewValue = state switch
+            {
+                EntityState.Added => JsonSerializer.Serialize(entityEntry.Entity),
+                _ => null,
+            },
+
+            OldValue = state switch
+            {
+                EntityState.Deleted => JsonSerializer.Serialize(entityEntry.Entity),
+                _ => null,
+            }
+        };
+
+        if (state != EntityState.Modified)
+            return log;
+
+        Dictionary<string, object?> oldValues = [];
+        Dictionary<string, object?> newValues = [];
+
+        foreach (var prop in entityEntry.Properties.Where(x => !x.IsTemporary))
+        {
+            var propertyName = prop.Metadata.Name;
+
+            if (prop.IsModified && (prop.OriginalValue is null || !prop.OriginalValue.Equals(prop.CurrentValue)))
+            {
+                if (prop.Metadata.Name.Equals("Password") || prop.Metadata.Name.Equals("Salt"))
+                {
+                    log.Description = "Було оновлено пароль";
+                    break;
+                }
+
+                if (prop.Metadata.Name.Equals("RefreshToken") || prop.Metadata.Name.Equals("RefreshTokenExpiry"))
+                {
+                    if (prop.OriginalValue is null)
+                        log.Description = "Новий вхід в аккаунт за допомогою паролю";
+                    else if (prop.CurrentValue is null)
+                        log.Description = "Вихід з аккаунту";
+                    else
+                        log.Description = "Було оновлено токен оновлення";
+                    break;
+                }
+
+                oldValues[propertyName] = prop.OriginalValue;
+                newValues[propertyName] = prop.CurrentValue;
+            }
+        }
+
+        log.OldValue = oldValues.Count == 0 ? null : JsonSerializer.Serialize(oldValues);
+        log.NewValue = newValues.Count == 0 ? null : JsonSerializer.Serialize(newValues);
+
+        return log;
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

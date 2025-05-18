@@ -1,4 +1,4 @@
-﻿namespace Server.Services.Dtos.SettingsOptions;
+﻿namespace Server.Services.Options.SettingsOptions;
 
 public class JwtOptions
 {

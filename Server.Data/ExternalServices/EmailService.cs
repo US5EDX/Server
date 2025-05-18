@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Server.Models.Interfaces.ExternalInterfaces;
-using Server.Services.Dtos;
+using Server.Services.Options.SettingsOptions;
 
 namespace Server.Data.ExternalServices
 {

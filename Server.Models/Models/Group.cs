@@ -1,9 +1,11 @@
 ﻿using Server.Models.Enums;
+using System.Text.Json.Serialization;
 
 namespace Server.Models.Models;
 
 public partial class Group
 {
+    [JsonIgnore]
     public uint GroupId { get; set; }
 
     public string GroupCode { get; set; } = null!;
@@ -40,9 +42,12 @@ public partial class Group
 
     public byte[]? CuratorId { get; set; }
 
+    [JsonIgnore]
     public virtual Worker? Curator { get; set; }
 
+    [JsonIgnore]
     public virtual Specialty Specialty { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual ICollection<Student> Students { get; set; } = new List<Student>();
 }

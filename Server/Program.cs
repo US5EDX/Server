@@ -11,9 +11,9 @@ using Server.Handlers;
 using Server.Middleware;
 using Server.Models.Interfaces;
 using Server.Services.DtoInterfaces;
-using Server.Services.Dtos;
 using Server.Services.Dtos.DisciplineDtos;
-using Server.Services.Dtos.SettingsOptions;
+using Server.Services.Options.ContextOptions.RequestContext;
+using Server.Services.Options.SettingsOptions;
 using Server.Services.Services;
 using Server.Services.Services.AuthorizationServices;
 using System.Text;
@@ -36,6 +36,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddData(builder.Configuration);
+
+builder.Services.AddScoped<IRequestContext, RequestContext>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();
@@ -112,6 +114,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseMiddleware<RequestContextMiddleware>();
 app.UseMiddleware<LoggingMiddleware>();
 
 app.MapControllers();
