@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.IdentityModel.Tokens;
 using Server.Data.Extensions;
+using Server.Data.Interceptors;
 using Server.Data.Repositories;
 using Server.Data.Repositories.DisciplineRepositories;
 using Server.Data.Repositories.RecordRepositories;
@@ -10,6 +12,7 @@ using Server.Data.Repositories.WorkerRepositroies;
 using Server.Handlers;
 using Server.Middleware;
 using Server.Models.Interfaces;
+using Server.Models.Models;
 using Server.Services.DtoInterfaces;
 using Server.Services.Dtos.DisciplineDtos;
 using Server.Services.Options.ContextOptions.RequestContext;
@@ -38,6 +41,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddData(builder.Configuration);
 
 builder.Services.AddScoped<IRequestContext, RequestContext>();
+builder.Services.AddKeyedScoped<List<(Auditlog Audit, Lazy<object?> Pk)>>("Audit", (_, _) => []);
+builder.Services.AddScoped<AuditInterceptor>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();

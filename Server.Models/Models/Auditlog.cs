@@ -6,7 +6,9 @@ public partial class Auditlog
 
     public string UserId { get; set; } = null!;
 
-    public string ActionType { get; set; } = null!; // "Insert", "Update", "Delete"
+    public string? IpAddress { get; set; }
+
+    public string ActionType { get; set; } = null!; // "Added", "Modified", "Deleted"
 
     public string EntityName { get; set; } = null!;
 
