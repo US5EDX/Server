@@ -7,6 +7,7 @@ namespace Server.Data.DbContexts;
 public partial class ElCoursesDbContext(DbContextOptions<ElCoursesDbContext> options, AuditInterceptor interceptor) :
     DbContext(options)
 {
+    public virtual DbSet<AppSetting> AppSettings { get; set; }
     public virtual DbSet<Auditlog> Auditlogs { get; set; }
     public virtual DbSet<Discipline> Disciplines { get; set; }
     public virtual DbSet<Faculty> Faculties { get; set; }

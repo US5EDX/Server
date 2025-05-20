@@ -96,18 +96,26 @@ public class DisciplineRepository(ElCoursesDbContext context) : IDisciplineRepos
         return true;
     }
 
-    public async Task<DeleteResultEnum> Delete(uint disciplineId, int notEnough)
+    public async Task<DeleteResultEnum> Delete(uint disciplineId, (int Bachelor, int Master, int PhD) notEnough)
     {
-        bool hasDependencies = await _context.Disciplines
-                .Where(d => d.DisciplineId == disciplineId)
-                .AnyAsync(d => d.Records.Count(r => r.Semester == Semesters.Fall) >= notEnough ||
-                 d.Records.Count(r => r.Semester == Semesters.Spring) >= notEnough);
-
-        if (hasDependencies) return DeleteResultEnum.HasDependencies;
-
         var existingDiscipline = await _context.Disciplines.FindAsync(disciplineId);
 
         if (existingDiscipline is null) return DeleteResultEnum.ValueNotFound;
+
+        var notEnoughValue = existingDiscipline.EduLevel switch
+        {
+            EduLevels.Bachelor => notEnough.Bachelor,
+            EduLevels.Master => notEnough.Master,
+            EduLevels.PHD => notEnough.PhD,
+            _ => 0
+        };
+
+        bool hasDependencies = await _context.Disciplines
+                .Where(d => d.DisciplineId == disciplineId)
+                .AnyAsync(d => d.Records.Count(r => r.Semester == Semesters.Fall) >= notEnoughValue ||
+                 d.Records.Count(r => r.Semester == Semesters.Spring) >= notEnoughValue);
+
+        if (hasDependencies) return DeleteResultEnum.HasDependencies;
 
         _context.Disciplines.Remove(existingDiscipline);
         await _context.SaveChangesAsync();

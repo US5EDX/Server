@@ -4,7 +4,8 @@ public class LoggingMiddleware(RequestDelegate next, ILogger<LoggingMiddleware> 
 {
     public async Task Invoke(HttpContext context)
     {
-        logger.LogInformation($"Запит: {context.Request.Method} {context.Request.Path}; Дата та час (UTC): {DateTime.UtcNow}");
+        logger.LogInformation("Запит: {Method} {Path}; Дата та час (UTC): {TimeStamp}",
+            context.Request.Method, context.Request.Path, DateTime.UtcNow);
         await next(context);
     }
 }

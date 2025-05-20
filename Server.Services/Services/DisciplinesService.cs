@@ -5,15 +5,16 @@ using Server.Models.Interfaces;
 using Server.Services.Converters;
 using Server.Services.DtoInterfaces;
 using Server.Services.Dtos.DisciplineDtos;
+using Server.Services.Dtos.SettingDtos;
 using Server.Services.Mappings;
 using Server.Services.Parsers;
+using Server.Services.Services.AppSettingServices;
 
 namespace Server.Services.Services;
 
 public class DisciplinesService(IDisciplineRepository disciplineRepository, IDisciplineDtoRepository disciplineDtoRepository,
-    IOptions<DisciplineStatusThresholds> disciplineStatusThresholds, IOptions<DisciplineStatusColors> disciplineStatusColors)
+    IAppSettingsService<Thresholds> disciplineStatusThresholds, IOptions<DisciplineStatusColors> disciplineStatusColors)
 {
-    private readonly DisciplineStatusThresholds _disciplineStatusThresholds = disciplineStatusThresholds.Value;
     private readonly DisciplineStatusColors _disciplineStatusColors = disciplineStatusColors.Value;
 
     public async Task<int> GetCount(uint facultyId, short holdingFilter,
@@ -71,16 +72,21 @@ public class DisciplinesService(IDisciplineRepository disciplineRepository, IDis
         return await disciplineDtoRepository.GetSearchResultsForStudent(code, year, eduLevel, courseMask, semester);
     }
 
-    public DisciplineStatusThresholds GetThresholds() => _disciplineStatusThresholds;
+    public async Task<Thresholds> GetThresholds() => await disciplineStatusThresholds.Get();
+
+    public async Task UpdateThresholdsOrThrow(Thresholds thresholds) => await disciplineStatusThresholds.UpdateOrThrow(thresholds);
 
     public async Task<object> GetDisciplinesPrintInfo(uint facultyId, CatalogTypes catalogType, short eduYear, Semesters semester)
     {
         var disciplines = await disciplineDtoRepository.GetOnSemester(facultyId, catalogType, eduYear, semester);
 
-        foreach (var discipline in disciplines)
-            discipline.ColorStatus = _disciplineStatusColors.GetColor(discipline.StudentsCount, _disciplineStatusThresholds);
+        var thresholds = await disciplineStatusThresholds.Get();
 
-        return new { Thresholds = _disciplineStatusThresholds, Disciplines = disciplines };
+        foreach (var discipline in disciplines)
+            discipline.ColorStatus = _disciplineStatusColors
+                .GetColor(discipline.StudentsCount, thresholds.GetValue(discipline.EduLevel));
+
+        return new { Thresholds = thresholds, Disciplines = disciplines };
     }
 
     public async Task<DisciplineFullInfoDto> AddDisciplineOrThrow(DisciplineRegistryDto discipline, string? userId)
@@ -110,7 +116,10 @@ public class DisciplinesService(IDisciplineRepository disciplineRepository, IDis
 
     public async Task DeleteOrThrow(uint disciplineId)
     {
-        var result = await disciplineRepository.Delete(disciplineId, _disciplineStatusThresholds.NotEnough);
+        var thresholds = await disciplineStatusThresholds.Get();
+
+        var result = await disciplineRepository.Delete(disciplineId,
+            (thresholds.Bachelor.NotEnough, thresholds.Master.NotEnough, thresholds.PhD.NotEnough));
 
         result.ThrowIfFailed("Дисципліну не знайдено", "Дисципліна як мінумум умовно набрана");
     }

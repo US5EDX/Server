@@ -1,4 +1,4 @@
-﻿namespace Server.Services.Dtos.DisciplineDtos;
+﻿namespace Server.Services.Dtos.SettingDtos;
 
 public class DisciplineStatusColors
 {
@@ -8,7 +8,7 @@ public class DisciplineStatusColors
 
     public string Filled { get; set; } = string.Empty;
 
-    public string GetColor(int studentsCount, DisciplineStatusThresholds thresholds)
+    public string GetColor(int studentsCount, ThresholdValue thresholds)
     {
         if (studentsCount < thresholds.NotEnough) return NotEnough;
 

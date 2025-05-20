@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.IdentityModel.Tokens;
 using Server.Data.Extensions;
 using Server.Data.Interceptors;
 using Server.Data.Repositories;
 using Server.Data.Repositories.DisciplineRepositories;
 using Server.Data.Repositories.RecordRepositories;
+using Server.Data.Repositories.SingletonRepositories;
 using Server.Data.Repositories.StudentRepositories;
 using Server.Data.Repositories.WorkerRepositroies;
 using Server.Handlers;
@@ -14,10 +14,11 @@ using Server.Middleware;
 using Server.Models.Interfaces;
 using Server.Models.Models;
 using Server.Services.DtoInterfaces;
-using Server.Services.Dtos.DisciplineDtos;
+using Server.Services.Dtos.SettingDtos;
 using Server.Services.Options.ContextOptions.RequestContext;
 using Server.Services.Options.SettingsOptions;
 using Server.Services.Services;
+using Server.Services.Services.AppSettingServices;
 using Server.Services.Services.AuthorizationServices;
 using System.Text;
 
@@ -43,6 +44,10 @@ builder.Services.AddData(builder.Configuration);
 builder.Services.AddScoped<IRequestContext, RequestContext>();
 builder.Services.AddKeyedScoped<List<(Auditlog Audit, Lazy<object?> Pk)>>("Audit", (_, _) => []);
 builder.Services.AddScoped<AuditInterceptor>();
+
+builder.Services.AddScoped<IAppSettingRepository, AppSettingRepository>();
+builder.Services.AddKeyedSingleton("ThresholdsLock", new SemaphoreSlim(1, 1));
+builder.Services.AddSingleton<IAppSettingsService<Thresholds>, ThresholdsService>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();
@@ -80,7 +85,6 @@ builder.Services.AddScoped<IStudentDtoRepository, StudentDtoRepository>();
 builder.Services.AddScoped<StudentsService>();
 
 builder.Services.Configure<MailOptions>(builder.Configuration.GetSection("MailSettings"));
-builder.Services.Configure<DisciplineStatusThresholds>(builder.Configuration.GetSection("DisciplineStatusThresholds"));
 builder.Services.Configure<DisciplineStatusColors>(builder.Configuration.GetSection("DisciplineStatusColors"));
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));

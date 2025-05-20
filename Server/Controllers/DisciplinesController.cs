@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Server.Models.Enums;
 using Server.Services.Dtos.DisciplineDtos;
+using Server.Services.Dtos.SettingDtos;
 using Server.Services.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
@@ -85,9 +86,17 @@ public class DisciplinesController(DisciplinesService disciplinesService) : Cont
         [BindRequired][Length(1, 50)] string code) =>
         Ok(await disciplinesService.GetOptionsByCodeSearch(code, holding, eduLevel, course, semester));
 
-    [Authorize(Roles = "2,3")]
+    [Authorize(Roles = "1,2,3")]
     [HttpGet("getTresholds")]
-    public async Task<IActionResult> GetTresholds() => Ok(await Task.Run(disciplinesService.GetThresholds));
+    public async Task<IActionResult> GetTresholds() => Ok(await disciplinesService.GetThresholds());
+
+    [Authorize(Roles = "1")]
+    [HttpPut("updateTresholds")]
+    public async Task<IActionResult> UpdateTresholds([FromBody] Thresholds thresholds)
+    {
+        await disciplinesService.UpdateThresholdsOrThrow(thresholds);
+        return Ok();
+    }
 
     [Authorize(Roles = "2")]
     [HttpGet("getDisciplinesPrintInfo")]

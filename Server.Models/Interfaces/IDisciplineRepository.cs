@@ -13,5 +13,5 @@ public interface IDisciplineRepository
     Task<Discipline> Add(Discipline discipline);
     Task<Discipline?> Update(Discipline discipline);
     Task<bool> UpdateStatus(uint disciplineId);
-    Task<DeleteResultEnum> Delete(uint disciplineId, int notEnough);
+    Task<DeleteResultEnum> Delete(uint disciplineId, (int Bachelor, int Master, int PhD) notEnough);
 }
