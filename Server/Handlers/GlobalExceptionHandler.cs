@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Server.Models.CustomExceptions;
+using System.ComponentModel.DataAnnotations;
 
 namespace Server.Handlers;
 
@@ -10,7 +11,7 @@ public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetails
     {
         httpContext.Response.StatusCode = exception switch
         {
-            BadRequestException => StatusCodes.Status400BadRequest,
+            BadRequestException or ValidationException => StatusCodes.Status400BadRequest,
             UnauthorizedException => StatusCodes.Status401Unauthorized,
             ForbidException => StatusCodes.Status403Forbidden,
             NotFoundException => StatusCodes.Status404NotFound,

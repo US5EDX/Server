@@ -20,6 +20,7 @@ using Server.Services.Options.SettingsOptions;
 using Server.Services.Services;
 using Server.Services.Services.AppSettingServices;
 using Server.Services.Services.AuthorizationServices;
+using Server.Services.Stores;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,8 +47,13 @@ builder.Services.AddKeyedScoped<List<(Auditlog Audit, Lazy<object?> Pk)>>("Audit
 builder.Services.AddScoped<AuditInterceptor>();
 
 builder.Services.AddScoped<IAppSettingRepository, AppSettingRepository>();
-builder.Services.AddKeyedSingleton("ThresholdsLock", new SemaphoreSlim(1, 1));
-builder.Services.AddSingleton<IAppSettingsService<Thresholds>, ThresholdsService>();
+
+builder.Services.AddKeyedSingleton(nameof(Thresholds), new SemaphoreSlim(1, 1));
+builder.Services.AddSingleton<IAppSettingStore<Thresholds>, AppSettingStore<Thresholds>>();
+builder.Services.AddScoped<IAppSettingsService<Thresholds>, AppSettingsService<Thresholds>>();
+builder.Services.AddScoped<IGetOnlyAppSettingsService<Thresholds>, AppSettingsService<Thresholds>>();
+
+builder.Services.AddScoped<KeyedAppSettingsService>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();

@@ -13,7 +13,7 @@ using Server.Services.Services.AppSettingServices;
 namespace Server.Services.Services;
 
 public class DisciplinesService(IDisciplineRepository disciplineRepository, IDisciplineDtoRepository disciplineDtoRepository,
-    IAppSettingsService<Thresholds> disciplineStatusThresholds, IOptions<DisciplineStatusColors> disciplineStatusColors)
+    IGetOnlyAppSettingsService<Thresholds> disciplineStatusThresholds, IOptions<DisciplineStatusColors> disciplineStatusColors)
 {
     private readonly DisciplineStatusColors _disciplineStatusColors = disciplineStatusColors.Value;
 
@@ -73,8 +73,6 @@ public class DisciplinesService(IDisciplineRepository disciplineRepository, IDis
     }
 
     public async Task<Thresholds> GetThresholds() => await disciplineStatusThresholds.Get();
-
-    public async Task UpdateThresholdsOrThrow(Thresholds thresholds) => await disciplineStatusThresholds.UpdateOrThrow(thresholds);
 
     public async Task<object> GetDisciplinesPrintInfo(uint facultyId, CatalogTypes catalogType, short eduYear, Semesters semester)
     {

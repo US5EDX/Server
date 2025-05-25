@@ -1,7 +1,6 @@
 ﻿namespace Server.Services.Services.AppSettingServices;
 
-public interface IAppSettingsService<T>
+public interface IAppSettingsService<T> : IGetOnlyAppSettingsService<T>
 {
-    Task<T> Get();
-    Task UpdateOrThrow(T thresholds);
+    Task UpdateOrThrow(T value);
 }
