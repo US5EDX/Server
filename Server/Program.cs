@@ -90,6 +90,9 @@ builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentDtoRepository, StudentDtoRepository>();
 builder.Services.AddScoped<StudentsService>();
 
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<AuditLogsService>();
+
 builder.Services.Configure<MailOptions>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.Configure<DisciplineStatusColors>(builder.Configuration.GetSection("DisciplineStatusColors"));
 

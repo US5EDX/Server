@@ -10,6 +10,8 @@ public class AuditlogConfiguration : IEntityTypeConfiguration<Auditlog>
     {
         entity.HasKey(e => e.Id).HasName("PRIMARY");
 
+        entity.HasIndex(e => e.Timestamp, "timestamp_idx");
+
         entity.ToTable("auditlogs");
 
         entity.Property(e => e.ActionType).HasColumnType("enum('Insert','Update','Delete')");
